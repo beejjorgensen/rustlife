@@ -1,21 +1,53 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::prelude::Stylize;
+use ratatui::prelude::{Buffer, Rect, Stylize};
 use ratatui::symbols::border;
-use ratatui::widgets::Block;
+use ratatui::widgets::{Block, StatefulWidget, Widget};
 use ratatui::{self, DefaultTerminal, text::Line};
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-struct App {
+mod util;
+
+struct LifeAreaState {
     cursor_x: u16,
     cursor_y: u16,
+}
+
+struct LifeArea {}
+
+impl StatefulWidget for LifeArea {
+    type State = LifeAreaState;
+
+    fn render(self, area: Rect, buf: &mut Buffer, state: &mut LifeAreaState) {
+        let title = Line::from(" Life ".bold());
+
+        let block = Block::bordered()
+            .title(title.centered())
+            .border_set(border::THICK);
+
+        let inner = block.inner(area);
+
+        block.render(area, buf);
+
+        (state.cursor_x, state.cursor_y) = util::clamp_to_rect(state.cursor_x, state.cursor_y, inner);
+
+        buf[(state.cursor_x, state.cursor_y)].set_symbol("#");
+
+        //frame.set_cursor_position((self.cursor_x, self.cursor_y));
+    }
+}
+
+struct App {
+    life_area_state: LifeAreaState,
 }
 
 impl App {
     fn new() -> Self {
         Self {
-            cursor_x: 0,
-            cursor_y: 0,
+            life_area_state: LifeAreaState {
+                cursor_x: 0,
+                cursor_y: 0,
+            },
         }
     }
 
@@ -29,8 +61,8 @@ impl App {
     fn run(&mut self, mut terminal: DefaultTerminal) -> Result<()> {
         let term_size = terminal.size()?;
 
-        self.cursor_x = term_size.width / 2;
-        self.cursor_y = term_size.height / 2;
+        self.life_area_state.cursor_x = term_size.width / 2;
+        self.life_area_state.cursor_y = term_size.height / 2;
 
         loop {
             terminal.draw(|frame| self.render(frame))?;
@@ -48,34 +80,21 @@ impl App {
     }
 
     fn render(&mut self, frame: &mut ratatui::Frame) {
-        if self.cursor_y < 1 {
-            self.cursor_y = 1;
-        }
+        let life_area = LifeArea {};
 
-        if self.cursor_y > frame.area().height - 2 {
-            self.cursor_y = frame.area().height - 2;
-        }
+        //frame.render_stateful_widget(life_area, frame.area(), &mut self.life_area_state);
+        frame.render_stateful_widget(
+            life_area,
+            Rect {
+                x: 10,
+                y: 5,
+                width: 30,
+                height: 20,
+            },
+            &mut self.life_area_state,
+        );
 
-        if self.cursor_x < 1 {
-            self.cursor_x = 1;
-        }
-
-        if self.cursor_x > frame.area().width - 2 {
-            self.cursor_x = frame.area().width - 2;
-        }
-
-        let title = Line::from(" Life ".bold());
-
-        let block = Block::bordered()
-            .title(title.centered())
-            .border_set(border::THICK);
-
-        frame.render_widget(block, frame.area());
-
-        let fb = frame.buffer_mut();
-        fb[(self.cursor_x, self.cursor_y)].set_symbol("#");
-
-        frame.set_cursor_position((self.cursor_x, self.cursor_y));
+        frame.set_cursor_position((self.life_area_state.cursor_x, self.life_area_state.cursor_y));
     }
 
     fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
@@ -85,32 +104,32 @@ impl App {
             }
 
             KeyCode::Up | KeyCode::Char('k') | KeyCode::Char('w') => {
-                self.cursor_y -= 1;
+                self.life_area_state.cursor_y -= 1;
             }
             KeyCode::Down | KeyCode::Char('j') | KeyCode::Char('s') | KeyCode::Char('x') => {
-                self.cursor_y += 1;
+                self.life_area_state.cursor_y += 1;
             }
             KeyCode::Left | KeyCode::Char('h') | KeyCode::Char('a') => {
-                self.cursor_x -= 1;
+                self.life_area_state.cursor_x -= 1;
             }
             KeyCode::Right | KeyCode::Char('l') | KeyCode::Char('d') => {
-                self.cursor_x += 1;
+                self.life_area_state.cursor_x += 1;
             }
             KeyCode::Char('u') | KeyCode::Char('q') => {
-                self.cursor_x -= 1;
-                self.cursor_y -= 1;
+                self.life_area_state.cursor_x -= 1;
+                self.life_area_state.cursor_y -= 1;
             }
             KeyCode::Char('o') | KeyCode::Char('e') => {
-                self.cursor_x += 1;
-                self.cursor_y -= 1;
+                self.life_area_state.cursor_x += 1;
+                self.life_area_state.cursor_y -= 1;
             }
             KeyCode::Char('n') | KeyCode::Char('z') => {
-                self.cursor_x -= 1;
-                self.cursor_y += 1;
+                self.life_area_state.cursor_x -= 1;
+                self.life_area_state.cursor_y += 1;
             }
             KeyCode::Char(',') | KeyCode::Char('c') => {
-                self.cursor_x += 1;
-                self.cursor_y += 1;
+                self.life_area_state.cursor_x += 1;
+                self.life_area_state.cursor_y += 1;
             }
             _ => (),
         }
