@@ -6,4 +6,3 @@ pub fn clamp_to_rect(x: u16, y: u16, rect: Rect) -> (u16, u16) {
 
     (x.clamp(rect.x, max_x), y.clamp(rect.y, max_y))
 }
-
