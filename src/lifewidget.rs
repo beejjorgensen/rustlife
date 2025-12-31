@@ -30,7 +30,5 @@ impl StatefulWidget for LifeWidget {
             util::clamp_to_rect(state.cursor_x, state.cursor_y, inner);
 
         buf[(state.cursor_x, state.cursor_y)].set_symbol("#");
-
-        //frame.set_cursor_position((self.cursor_x, self.cursor_y));
     }
 }
