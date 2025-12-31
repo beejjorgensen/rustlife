@@ -1,50 +1,58 @@
 #[derive(Debug, Clone, Copy)]
-enum LifeCell {
+pub enum LifeCell {
     Dead,
     Alive,
 }
 
-struct Life {
+pub struct Life {
+    width: usize,
+    height: usize,
     cells: Vec<Vec<LifeCell>>,
 }
 
 impl Life {
-    pub fn new(width: usize, height: usize) -> Self {
-        let mut cells: Vec<Vec<LifeCell>> = Vec::new();
-
-        for row_index in 0..height {
-            cells.push(vec![LifeCell::Dead; width]);
-        }
-
+    pub fn new() -> Self {
         Self {
-            cells
+            width: 0,
+            height: 0,
+            cells: Vec::new(),
+        }
+    }
+
+    pub fn init(&mut self, width: usize, height: usize) {
+        self.cells.clear();
+        self.width = width;
+        self.height = height;
+
+        for _ in 0..height {
+            self.cells.push(vec![LifeCell::Dead; width]);
         }
     }
 
     pub fn get_width(&self) -> usize {
-        self.cells.get(0).len()
+        self.width
     }
 
     pub fn get_height(&self) -> usize {
-        self.cells.len()
+        self.height
     }
 
     pub fn get_cell(&self, x: usize, y: usize) -> LifeCell {
-        if x < self.get_width() && y < self.heigh_height() {
+        if x < self.width && y < self.height {
             self.cells[y][x]
         } else {
             LifeCell::Dead
         }
     }
 
-    pub fn set_cell(&self, x: usize, y: usize, state: LifeCell) {
-        if x < self.get_width() && y < self.heigh_height() {
+    pub fn set_cell(&mut self, x: usize, y: usize, state: LifeCell) {
+        if x < self.width && y < self.height {
             self.cells[y][x] = state;
         }
     }
 
     pub fn get_row(&self, y: usize) -> Option<&Vec<LifeCell>> {
-        if y < self.heigh_height() {
+        if y < self.height {
             Some(&(self.cells[y]))
         } else {
             None

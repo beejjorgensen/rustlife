@@ -9,18 +9,23 @@ mod lifewidget;
 mod util;
 
 use lifewidget::*;
+use life::*;
 
 struct App {
+    life: Life,
     life_widget_state: LifeWidgetState,
+    life_widget_rect: Rect,
 }
 
 impl App {
     fn new() -> Self {
         Self {
+            life: Life::new(),
             life_widget_state: LifeWidgetState {
                 cursor_x: 0,
                 cursor_y: 0,
             },
+            life_widget_rect: Rect::default(),
         }
     }
 
@@ -31,11 +36,25 @@ impl App {
         result
     }
 
-    fn run(&mut self, mut terminal: DefaultTerminal) -> Result<()> {
+    fn init(&mut self, terminal: &DefaultTerminal) -> Result<()> {
         let term_size = terminal.size()?;
 
+        self.life_widget_rect = Rect {
+            x: 10,
+            y: 5,
+            width: 30,
+            height: 20,
+        };
+
+        self.life.init(self.life_widget_rect.width as usize, self.life_widget_rect.height as usize);
         self.life_widget_state.cursor_x = term_size.width / 2;
         self.life_widget_state.cursor_y = term_size.height / 2;
+
+        Ok(())
+    }
+
+    fn run(&mut self, mut terminal: DefaultTerminal) -> Result<()> {
+        self.init(&terminal);
 
         loop {
             terminal.draw(|frame| self.render(frame))?;
@@ -58,12 +77,7 @@ impl App {
         //frame.render_stateful_widget(life_widget, frame.area(), &mut self.life_widget_state);
         frame.render_stateful_widget(
             life_widget,
-            Rect {
-                x: 10,
-                y: 5,
-                width: 30,
-                height: 20,
-            },
+            self.life_widget_rect,
             &mut self.life_widget_state,
         );
 
