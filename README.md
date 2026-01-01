@@ -3,6 +3,8 @@
 This is an experiment to get better at Rust programming in general, and
 also to learn more about [Ratatui].
 
+![Rust Life screenshot](img/screenshot.jpg)
+
 ## Controls
 
 Roguelike cursor keys:
