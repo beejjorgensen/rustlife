@@ -65,7 +65,7 @@ impl App {
         self.init(&terminal)?;
 
         loop {
-            terminal.draw(|frame| self.render(frame))?;
+            terminal.draw(|frame| self.draw(frame))?;
 
             match event::read()? {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
@@ -86,7 +86,7 @@ impl App {
         Ok(())
     }
 
-    fn render(&mut self, frame: &mut ratatui::Frame) {
+    fn draw(&mut self, frame: &mut ratatui::Frame) {
         let life_widget = LifeWidget {};
 
         self.life_widget_rect = frame.area();
