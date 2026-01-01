@@ -14,6 +14,7 @@ use lifewidget::*;
 struct App {
     life_widget_state: LifeWidgetState,
     life_widget_rect: Rect,
+    life: Life,
 }
 
 impl App {
@@ -22,9 +23,9 @@ impl App {
             life_widget_state: LifeWidgetState {
                 cursor_x: 0,
                 cursor_y: 0,
-                life: Life::new(),
             },
             life_widget_rect: Rect::default(),
+            life: Life::new(),
         }
     }
 
@@ -47,12 +48,12 @@ impl App {
 
         const BORDER_SUB: usize = 2; // amount to subtract for life widget border
 
-        self.life_widget_state.life.init(
+        self.life.init(
             self.life_widget_rect.width as usize - BORDER_SUB,
             self.life_widget_rect.height as usize - BORDER_SUB,
-        ); // -2 for the border
+        );
 
-        self.life_widget_state.life.randomize();
+        self.life.randomize();
 
         self.life_widget_state.cursor_x = self.life_widget_rect.width / 2 + self.life_widget_rect.x;
         self.life_widget_state.cursor_y =
@@ -75,8 +76,7 @@ impl App {
                 }
 
                 Event::Resize(width, height) => {
-                    self.life_widget_state
-                        .life
+                    self.life
                         .resize(width as usize - 2, height as usize - 2);
                 }
 
@@ -87,7 +87,7 @@ impl App {
     }
 
     fn draw(&mut self, frame: &mut ratatui::Frame) {
-        let life_widget = LifeWidget {};
+        let life_widget = LifeWidget::new(&self.life);
 
         self.life_widget_rect = frame.area();
 
@@ -139,7 +139,7 @@ impl App {
             }
 
             KeyCode::Char('s') => {
-                self.life_widget_state.life.step();
+                self.life.step();
             }
             _ => (),
         }

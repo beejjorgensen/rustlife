@@ -6,15 +6,19 @@ use ratatui::{self, text::Line};
 use crate::life;
 use crate::util;
 
-pub struct LifeWidgetState {
-    pub cursor_x: u16,
-    pub cursor_y: u16,
-    pub life: life::Life,
+pub struct LifeWidget<'a>{
+    life: &'a life::Life,
 }
 
-pub struct LifeWidget {}
+impl<'a> LifeWidget<'a> {
+    pub fn new(life: &'a life::Life) -> Self {
+        Self {
+            life,
+        }
+    }
+}
 
-impl StatefulWidget for LifeWidget {
+impl Widget for LifeWidget<'_> {
     type State = LifeWidgetState;
 
     fn render(self, area: Rect, buf: &mut Buffer, state: &mut LifeWidgetState) {
@@ -28,10 +32,7 @@ impl StatefulWidget for LifeWidget {
 
         block.render(area, buf);
 
-        (state.cursor_x, state.cursor_y) =
-            util::clamp_to_rect(state.cursor_x, state.cursor_y, inner);
-
-        let cells = state.life.get_cells();
+        let cells = self.life.get_cells();
 
         for (y, row) in cells.iter().enumerate() {
             for (x, cell) in row.iter().enumerate() {
