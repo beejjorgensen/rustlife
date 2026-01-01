@@ -6,3 +6,12 @@ pub fn clamp_to_rect(x: u16, y: u16, rect: Rect) -> (u16, u16) {
 
     (x.clamp(rect.x, max_x), y.clamp(rect.y, max_y))
 }
+
+pub fn inset_rect(x_amt: u16, y_amt: u16, rect: Rect) -> Rect {
+    Rect {
+        x: rect.x + x_amt,
+        y: rect.y + y_amt,
+        width: rect.width.saturating_sub(x_amt * 2),
+        height: rect.height.saturating_sub(y_amt * 2),
+    }
+}

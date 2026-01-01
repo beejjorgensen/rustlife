@@ -12,20 +12,19 @@ use life::*;
 use lifewidget::*;
 
 struct App {
-    life_widget_state: LifeWidgetState,
     life_widget_rect: Rect,
     life: Life,
+    cursor_x: u16,
+    cursor_y: u16,
 }
 
 impl App {
     fn new() -> Self {
         Self {
-            life_widget_state: LifeWidgetState {
-                cursor_x: 0,
-                cursor_y: 0,
-            },
             life_widget_rect: Rect::default(),
             life: Life::new(),
+            cursor_x: 0,
+            cursor_y: 0,
         }
     }
 
@@ -55,8 +54,8 @@ impl App {
 
         self.life.randomize();
 
-        self.life_widget_state.cursor_x = self.life_widget_rect.width / 2 + self.life_widget_rect.x;
-        self.life_widget_state.cursor_y =
+        self.cursor_x = self.life_widget_rect.width / 2 + self.life_widget_rect.x;
+        self.cursor_y =
             self.life_widget_rect.height / 2 + self.life_widget_rect.y;
 
         Ok(())
@@ -90,16 +89,18 @@ impl App {
         let life_widget = LifeWidget::new(&self.life);
 
         self.life_widget_rect = frame.area();
+        let inner = util::inset_rect(1, 1, self.life_widget_rect);
 
-        frame.render_stateful_widget(
+        frame.render_widget(
             life_widget,
-            self.life_widget_rect,
-            &mut self.life_widget_state,
+            self.life_widget_rect
         );
 
+        (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
+
         frame.set_cursor_position((
-            self.life_widget_state.cursor_x,
-            self.life_widget_state.cursor_y,
+            self.cursor_x,
+            self.cursor_y,
         ));
     }
 
@@ -110,32 +111,32 @@ impl App {
             }
 
             KeyCode::Up | KeyCode::Char('k') => {
-                self.life_widget_state.cursor_y -= 1;
+                self.cursor_y -= 1;
             }
             KeyCode::Down | KeyCode::Char('j') => {
-                self.life_widget_state.cursor_y += 1;
+                self.cursor_y += 1;
             }
             KeyCode::Left | KeyCode::Char('h') => {
-                self.life_widget_state.cursor_x -= 1;
+                self.cursor_x -= 1;
             }
             KeyCode::Right | KeyCode::Char('l') => {
-                self.life_widget_state.cursor_x += 1;
+                self.cursor_x += 1;
             }
             KeyCode::Char('y') => {
-                self.life_widget_state.cursor_x -= 1;
-                self.life_widget_state.cursor_y -= 1;
+                self.cursor_x -= 1;
+                self.cursor_y -= 1;
             }
             KeyCode::Char('u') => {
-                self.life_widget_state.cursor_x += 1;
-                self.life_widget_state.cursor_y -= 1;
+                self.cursor_x += 1;
+                self.cursor_y -= 1;
             }
             KeyCode::Char('b') => {
-                self.life_widget_state.cursor_x -= 1;
-                self.life_widget_state.cursor_y += 1;
+                self.cursor_x -= 1;
+                self.cursor_y += 1;
             }
             KeyCode::Char('n') => {
-                self.life_widget_state.cursor_x += 1;
-                self.life_widget_state.cursor_y += 1;
+                self.cursor_x += 1;
+                self.cursor_y += 1;
             }
 
             KeyCode::Char('s') => {

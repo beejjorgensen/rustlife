@@ -1,10 +1,9 @@
 use ratatui::prelude::{Buffer, Rect, Stylize};
 use ratatui::symbols::border;
-use ratatui::widgets::{Block, StatefulWidget, Widget};
+use ratatui::widgets::{Block, Widget};
 use ratatui::{self, text::Line};
 
 use crate::life;
-use crate::util;
 
 pub struct LifeWidget<'a>{
     life: &'a life::Life,
@@ -19,9 +18,7 @@ impl<'a> LifeWidget<'a> {
 }
 
 impl Widget for LifeWidget<'_> {
-    type State = LifeWidgetState;
-
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut LifeWidgetState) {
+    fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Life ".bold());
 
         let block = Block::bordered()
@@ -29,7 +26,6 @@ impl Widget for LifeWidget<'_> {
             .border_set(border::THICK);
 
         let inner = block.inner(area);
-
         block.render(area, buf);
 
         let cells = self.life.get_cells();
