@@ -8,11 +8,10 @@ mod life;
 mod lifewidget;
 mod util;
 
-use lifewidget::*;
 use life::*;
+use lifewidget::*;
 
 struct App {
-    life: Life,
     life_widget_state: LifeWidgetState,
     life_widget_rect: Rect,
 }
@@ -20,10 +19,10 @@ struct App {
 impl App {
     fn new() -> Self {
         Self {
-            life: Life::new(),
             life_widget_state: LifeWidgetState {
                 cursor_x: 0,
                 cursor_y: 0,
+                life: Life::new(),
             },
             life_widget_rect: Rect::default(),
         }
@@ -46,7 +45,11 @@ impl App {
             height: 20,
         };
 
-        self.life.init(self.life_widget_rect.width as usize, self.life_widget_rect.height as usize);
+        self.life_widget_state.life.init(
+            self.life_widget_rect.width as usize - 2,
+            self.life_widget_rect.height as usize - 2,
+        ); // -2 for the border
+        self.life_widget_state.life.randomize();
         self.life_widget_state.cursor_x = term_size.width / 2;
         self.life_widget_state.cursor_y = term_size.height / 2;
 
@@ -54,7 +57,7 @@ impl App {
     }
 
     fn run(&mut self, mut terminal: DefaultTerminal) -> Result<()> {
-        self.init(&terminal);
+        self.init(&terminal)?;
 
         loop {
             terminal.draw(|frame| self.render(frame))?;

@@ -1,3 +1,5 @@
+use rand::random;
+
 #[derive(Debug, Clone, Copy)]
 pub enum LifeCell {
     Dead,
@@ -29,6 +31,25 @@ impl Life {
         }
     }
 
+    pub fn randomize(&mut self) {
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let v: f32 = random();
+
+                self.set_cell(
+                    x,
+                    y,
+                    if v < 0.5 {
+                        LifeCell::Alive
+                    } else {
+                        LifeCell::Dead
+                    },
+                );
+            }
+        }
+    }
+
+    /*
     pub fn get_width(&self) -> usize {
         self.width
     }
@@ -44,6 +65,7 @@ impl Life {
             LifeCell::Dead
         }
     }
+    */
 
     pub fn set_cell(&mut self, x: usize, y: usize, state: LifeCell) {
         if x < self.width && y < self.height {
@@ -51,11 +73,17 @@ impl Life {
         }
     }
 
+    /*
     pub fn get_row(&self, y: usize) -> Option<&Vec<LifeCell>> {
         if y < self.height {
             Some(&(self.cells[y]))
         } else {
             None
         }
+    }
+    */
+
+    pub fn get_cells(&self) -> &Vec<Vec<LifeCell>> {
+        &self.cells
     }
 }
