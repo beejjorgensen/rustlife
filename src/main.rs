@@ -39,19 +39,24 @@ impl App {
         let term_size = terminal.size()?;
 
         self.life_widget_rect = Rect {
-            x: 10,
-            y: 5,
-            width: 30,
-            height: 20,
+            x: 0,
+            y: 0,
+            width: term_size.width,
+            height: term_size.height,
         };
 
+        const BORDER_SUB: usize = 2; // amount to subtract for life widget border
+
         self.life_widget_state.life.init(
-            self.life_widget_rect.width as usize - 2,
-            self.life_widget_rect.height as usize - 2,
+            self.life_widget_rect.width as usize - BORDER_SUB,
+            self.life_widget_rect.height as usize - BORDER_SUB,
         ); // -2 for the border
+
         self.life_widget_state.life.randomize();
-        self.life_widget_state.cursor_x = term_size.width / 2;
-        self.life_widget_state.cursor_y = term_size.height / 2;
+
+        self.life_widget_state.cursor_x = self.life_widget_rect.width / 2 + self.life_widget_rect.x;
+        self.life_widget_state.cursor_y =
+            self.life_widget_rect.height / 2 + self.life_widget_rect.y;
 
         Ok(())
     }
@@ -92,37 +97,41 @@ impl App {
 
     fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
         match key_event.code {
-            KeyCode::Char('Q') | KeyCode::Esc => {
+            KeyCode::Char('q') | KeyCode::Esc => {
                 return false;
             }
 
-            KeyCode::Up | KeyCode::Char('k') | KeyCode::Char('w') => {
+            KeyCode::Up | KeyCode::Char('k') => {
                 self.life_widget_state.cursor_y -= 1;
             }
-            KeyCode::Down | KeyCode::Char('j') | KeyCode::Char('s') | KeyCode::Char('x') => {
+            KeyCode::Down | KeyCode::Char('j') => {
                 self.life_widget_state.cursor_y += 1;
             }
-            KeyCode::Left | KeyCode::Char('h') | KeyCode::Char('a') => {
+            KeyCode::Left | KeyCode::Char('h') => {
                 self.life_widget_state.cursor_x -= 1;
             }
-            KeyCode::Right | KeyCode::Char('l') | KeyCode::Char('d') => {
+            KeyCode::Right | KeyCode::Char('l') => {
                 self.life_widget_state.cursor_x += 1;
             }
-            KeyCode::Char('u') | KeyCode::Char('q') => {
+            KeyCode::Char('y') => {
                 self.life_widget_state.cursor_x -= 1;
                 self.life_widget_state.cursor_y -= 1;
             }
-            KeyCode::Char('o') | KeyCode::Char('e') => {
+            KeyCode::Char('u') => {
                 self.life_widget_state.cursor_x += 1;
                 self.life_widget_state.cursor_y -= 1;
             }
-            KeyCode::Char('n') | KeyCode::Char('z') => {
+            KeyCode::Char('b') => {
                 self.life_widget_state.cursor_x -= 1;
                 self.life_widget_state.cursor_y += 1;
             }
-            KeyCode::Char(',') | KeyCode::Char('c') => {
+            KeyCode::Char('n') => {
                 self.life_widget_state.cursor_x += 1;
                 self.life_widget_state.cursor_y += 1;
+            }
+
+            KeyCode::Char('s') => {
+                self.life_widget_state.life.step();
             }
             _ => (),
         }
