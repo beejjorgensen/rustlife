@@ -1,7 +1,7 @@
 # Rust Life
 
 This is an experiment to get better at Rust programming in general, and
-also to learn more about [Ratatui].
+also to learn more about [Ratatui](https://ratatui.rs/).
 
 ![Rust Life screenshot](img/screenshot.jpg)
 
