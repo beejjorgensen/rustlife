@@ -5,7 +5,7 @@ also to learn more about [Ratatui].
 
 ## Controls
 
-BSD-robots cursor keys:
+Roguelike cursor keys:
 
 ```
 y k u
