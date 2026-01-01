@@ -22,7 +22,6 @@ q: Quit
 
 ## TODO
 
-* Handle resizing properly
 * Add keys and functionality:
   * Randomize
   * Clear board
@@ -30,7 +29,7 @@ q: Quit
   * Run/stop
   * Help
   * About
-* cheat sheet on bottom bar
-* colors
+* Cheat sheet on bottom bar
+* Colors
 * Doc comments
 

@@ -54,16 +54,6 @@ impl Life {
         }
     }
 
-    /*
-    pub fn get_width(&self) -> usize {
-        self.width
-    }
-
-    pub fn get_height(&self) -> usize {
-        self.height
-    }
-    */
-
     pub fn get_cell(&self, x: usize, y: usize) -> LifeCell {
         if x < self.width && y < self.height {
             self.cells[self.cur_page][y][x]
@@ -138,6 +128,19 @@ impl Life {
         } // for y
 
         self.cur_page = other_page;
+    }
+
+    pub fn resize(&mut self, width: usize, height: usize) {
+        for page in 0..=1 {
+            self.cells[page].resize(height, vec![LifeCell::Dead; width]);
+
+            for i in 0..height {
+                self.cells[page][i].resize(width, LifeCell::Dead);
+            }
+        }
+
+        self.width = width;
+        self.height = height;
     }
 
     pub fn get_cells(&self) -> &Vec<Vec<LifeCell>> {

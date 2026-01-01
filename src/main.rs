@@ -73,6 +73,13 @@ impl App {
                         break;
                     }
                 }
+
+                Event::Resize(width, height) => {
+                    self.life_widget_state
+                        .life
+                        .resize(width as usize - 2, height as usize - 2);
+                }
+
                 _ => (),
             }
         }
@@ -82,7 +89,8 @@ impl App {
     fn render(&mut self, frame: &mut ratatui::Frame) {
         let life_widget = LifeWidget {};
 
-        //frame.render_stateful_widget(life_widget, frame.area(), &mut self.life_widget_state);
+        self.life_widget_rect = frame.area();
+
         frame.render_stateful_widget(
             life_widget,
             self.life_widget_rect,
