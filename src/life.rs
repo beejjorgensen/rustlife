@@ -80,6 +80,15 @@ impl Life {
         }
     }
 
+    pub fn toggle(&mut self, x: usize, y: usize) {
+        if x < self.width && y < self.height {
+            match self.get_cell(x, y) {
+                LifeCell::Alive => self.set_cell(x, y, LifeCell::Dead),
+                LifeCell::Dead => self.set_cell(x, y, LifeCell::Alive),
+            }
+        }
+    }
+
     /*
     pub fn get_row(&self, y: usize) -> Option<&Vec<LifeCell>> {
         if y < self.height {

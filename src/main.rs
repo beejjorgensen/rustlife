@@ -55,8 +55,7 @@ impl App {
         self.life.randomize();
 
         self.cursor_x = self.life_widget_rect.width / 2 + self.life_widget_rect.x;
-        self.cursor_y =
-            self.life_widget_rect.height / 2 + self.life_widget_rect.y;
+        self.cursor_y = self.life_widget_rect.height / 2 + self.life_widget_rect.y;
 
         Ok(())
     }
@@ -75,8 +74,7 @@ impl App {
                 }
 
                 Event::Resize(width, height) => {
-                    self.life
-                        .resize(width as usize - 2, height as usize - 2);
+                    self.life.resize(width as usize - 2, height as usize - 2);
                 }
 
                 _ => (),
@@ -91,17 +89,11 @@ impl App {
         self.life_widget_rect = frame.area();
         let inner = util::inset_rect(1, 1, self.life_widget_rect);
 
-        frame.render_widget(
-            life_widget,
-            self.life_widget_rect
-        );
+        frame.render_widget(life_widget, self.life_widget_rect);
 
         (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
 
-        frame.set_cursor_position((
-            self.cursor_x,
-            self.cursor_y,
-        ));
+        frame.set_cursor_position((self.cursor_x, self.cursor_y));
     }
 
     fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
@@ -142,6 +134,12 @@ impl App {
             KeyCode::Char('s') => {
                 self.life.step();
             }
+
+            KeyCode::Char(' ') | KeyCode::Char('t') => {
+                self.life
+                    .toggle(self.cursor_x as usize - 1, self.cursor_y as usize - 1);
+            }
+
             _ => (),
         }
 

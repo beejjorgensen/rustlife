@@ -5,15 +5,13 @@ use ratatui::{self, text::Line};
 
 use crate::life;
 
-pub struct LifeWidget<'a>{
+pub struct LifeWidget<'a> {
     life: &'a life::Life,
 }
 
 impl<'a> LifeWidget<'a> {
     pub fn new(life: &'a life::Life) -> Self {
-        Self {
-            life,
-        }
+        Self { life }
     }
 }
 

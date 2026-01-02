@@ -19,6 +19,7 @@ b j n
 
 ```
 s: Step
+t: Toggle cell
 q: Quit
 ```
 
@@ -27,7 +28,6 @@ q: Quit
 * Add keys and functionality:
   * Randomize
   * Clear board
-  * Set/clear cell
   * Run/stop
   * Help
   * About
