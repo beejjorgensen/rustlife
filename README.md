@@ -21,13 +21,13 @@ b j n
 s: Step
 t: Toggle cell
 c: Clear screen
+r: Randomize
 q: Quit
 ```
 
 ## TODO
 
 * Add keys and functionality:
-  * Randomize
   * Run/stop
   * Help
   * About

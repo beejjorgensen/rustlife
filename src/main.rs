@@ -144,6 +144,10 @@ impl App {
                 self.life.clear();
             }
 
+            KeyCode::Char('r') => {
+                self.life.randomize();
+            }
+
             _ => (),
         }
 
