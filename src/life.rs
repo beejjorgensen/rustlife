@@ -89,6 +89,12 @@ impl Life {
         }
     }
 
+    pub fn clear(&mut self) {
+        for row in &mut self.cells[self.cur_page] {
+            row.fill(LifeCell::Dead);
+        }
+    }
+
     /*
     pub fn get_row(&self, y: usize) -> Option<&Vec<LifeCell>> {
         if y < self.height {

@@ -140,6 +140,10 @@ impl App {
                     .toggle(self.cursor_x as usize - 1, self.cursor_y as usize - 1);
             }
 
+            KeyCode::Char('c') => {
+                self.life.clear();
+            }
+
             _ => (),
         }
 
