@@ -6,16 +6,25 @@ use ratatui::{self, text::Line};
 use crate::life;
 
 pub struct LifeWidget<'a> {
+    block: Option<Block<'a>>,
     life: &'a life::Life,
 }
 
 impl<'a> LifeWidget<'a> {
     pub fn new(life: &'a life::Life) -> Self {
-        Self { life }
+        Self {
+            block: None,
+            life,
+        }}
     }
 }
 
 impl Widget for LifeWidget<'_> {
+    fn block(mut self, block: Block<'a>) -> Self {
+        self.block = Some(block);
+        self
+    }
+
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Life ".bold());
 
