@@ -1,7 +1,5 @@
-use ratatui::prelude::{Buffer, Rect, Stylize};
-use ratatui::symbols::border;
+use ratatui::prelude::{BlockExt, Buffer, Rect};
 use ratatui::widgets::{Block, Widget};
-use ratatui::{self, text::Line};
 
 use crate::life;
 
@@ -12,20 +10,25 @@ pub struct LifeWidget<'a> {
 
 impl<'a> LifeWidget<'a> {
     pub fn new(life: &'a life::Life) -> Self {
-        Self {
-            block: None,
-            life,
-        }}
+        Self { block: None, life }
+    }
+
+    #[allow(dead_code)]
+    pub fn block(mut self, block: Block<'a>) -> Self {
+        self.block = Some(block);
+        self
     }
 }
 
 impl Widget for LifeWidget<'_> {
-    fn block(mut self, block: Block<'a>) -> Self {
-        self.block = Some(block);
-        self
-    }
-
     fn render(self, area: Rect, buf: &mut Buffer) {
+        Widget::render(&self, area, buf);
+    }
+}
+
+impl Widget for &LifeWidget<'_> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        /*
         let title = Line::from(" Life ".bold());
 
         let block = Block::bordered()
@@ -34,6 +37,14 @@ impl Widget for LifeWidget<'_> {
 
         let inner = block.inner(area);
         block.render(area, buf);
+        */
+
+        let area = area.intersection(buf.area);
+        if let Some(block) = self.block.as_ref() {
+            block.render(area, buf);
+        }
+
+        let inner = self.block.inner_if_some(area);
 
         let cells = self.life.get_cells();
 

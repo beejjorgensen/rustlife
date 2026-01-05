@@ -1,6 +1,8 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::prelude::Rect;
-use ratatui::{self, DefaultTerminal};
+use ratatui::prelude::{Rect, Stylize};
+use ratatui::symbols::border;
+use ratatui::widgets::Block;
+use ratatui::{self, DefaultTerminal, text::Line};
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -45,11 +47,9 @@ impl App {
             height: term_size.height,
         };
 
-        const BORDER_SUB: usize = 2; // amount to subtract for life widget border
-
         self.life.init(
-            self.life_widget_rect.width as usize - BORDER_SUB,
-            self.life_widget_rect.height as usize - BORDER_SUB,
+            self.life_widget_rect.width as usize - 2,
+            self.life_widget_rect.height as usize - 2,
         );
 
         self.life.randomize();
@@ -74,6 +74,8 @@ impl App {
                 }
 
                 Event::Resize(width, height) => {
+                    self.life_widget_rect.width = width;
+                    self.life_widget_rect.height = height;
                     self.life.resize(width as usize - 2, height as usize - 2);
                 }
 
@@ -84,7 +86,13 @@ impl App {
     }
 
     fn draw(&mut self, frame: &mut ratatui::Frame) {
-        let life_widget = LifeWidget::new(&self.life);
+        let title = Line::from(" Life ".bold());
+
+        let block = Block::bordered()
+            .title(title.centered())
+            .border_set(border::THICK);
+
+        let life_widget = LifeWidget::new(&self.life).block(block);
 
         self.life_widget_rect = frame.area();
         let inner = util::inset_rect(1, 1, self.life_widget_rect);

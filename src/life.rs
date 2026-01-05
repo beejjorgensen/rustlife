@@ -182,3 +182,9 @@ impl Life {
         &self.cells[self.cur_page]
     }
 }
+
+impl Default for Life {
+    fn default() -> Self {
+        Self::new()
+    }
+}
