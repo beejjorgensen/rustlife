@@ -94,10 +94,9 @@ impl App {
 
         let life_widget = LifeWidget::new(&self.life).block(block);
 
-        self.life_widget_rect = frame.area();
-        let inner = util::inset_rect(1, 1, self.life_widget_rect);
+        let inner = life_widget.inner(frame.area());
 
-        frame.render_widget(life_widget, self.life_widget_rect);
+        frame.render_widget(life_widget, frame.area());
 
         (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
 

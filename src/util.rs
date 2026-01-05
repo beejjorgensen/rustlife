@@ -2,6 +2,7 @@
 use ratatui::prelude::Rect;
 
 /// Clamp x, y coordinates to a [`Rect`].
+#[allow(dead_code)]
 pub fn clamp_to_rect(x: u16, y: u16, rect: Rect) -> (u16, u16) {
     let max_x = rect.x + rect.width.saturating_sub(1);
     let max_y = rect.y + rect.height.saturating_sub(1);
@@ -10,6 +11,7 @@ pub fn clamp_to_rect(x: u16, y: u16, rect: Rect) -> (u16, u16) {
 }
 
 /// Compute a new [`Rect`] from a given one and inset values.
+#[allow(dead_code)]
 pub fn inset_rect(x_amt: u16, y_amt: u16, rect: Rect) -> Rect {
     Rect {
         x: rect.x + x_amt,

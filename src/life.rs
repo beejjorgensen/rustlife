@@ -109,17 +109,6 @@ impl Life {
         }
     }
 
-    /*
-    /// Get a row of the life grid.
-    pub fn get_row(&self, y: usize) -> Option<&Vec<LifeCell>> {
-        if y < self.height {
-            Some(&(self.cells[y]))
-        } else {
-            None
-        }
-    }
-    */
-
     /// Single step the life simuation.
     pub fn step(&mut self) {
         let other_page = if self.cur_page == 0 { 1 } else { 0 };

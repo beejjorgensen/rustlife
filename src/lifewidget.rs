@@ -18,6 +18,15 @@ impl<'a> LifeWidget<'a> {
         self.block = Some(block);
         self
     }
+
+    #[allow(dead_code)]
+    pub fn inner(&self, area: Rect) -> Rect {
+        if let Some(block) = &self.block {
+            block.inner(area)
+        } else {
+            area
+        }
+    }
 }
 
 impl Widget for LifeWidget<'_> {
@@ -28,17 +37,6 @@ impl Widget for LifeWidget<'_> {
 
 impl Widget for &LifeWidget<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        /*
-        let title = Line::from(" Life ".bold());
-
-        let block = Block::bordered()
-            .title(title.centered())
-            .border_set(border::THICK);
-
-        let inner = block.inner(area);
-        block.render(area, buf);
-        */
-
         let area = area.intersection(buf.area);
         if let Some(block) = self.block.as_ref() {
             block.render(area, buf);
