@@ -1,7 +1,7 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::prelude::{Rect, Stylize};
+use ratatui::prelude::{Constraint, Direction, Layout, Rect, Stylize};
 use ratatui::symbols::border;
-use ratatui::widgets::Block;
+use ratatui::widgets::{Block, Clear, Paragraph};
 use ratatui::{self, DefaultTerminal, text::Line};
 use std::time::{Duration, Instant};
 
@@ -27,6 +27,7 @@ struct App {
     running: bool,
     tick_rate: Duration,
     next_tick: Instant,
+    help_popup: bool,
 }
 
 impl App {
@@ -39,6 +40,7 @@ impl App {
             running: false,
             tick_rate: Duration::from_millis(20),
             next_tick: Instant::now(),
+            help_popup: false,
         }
     }
 
@@ -136,6 +138,35 @@ impl App {
         (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
 
         frame.set_cursor_position((self.cursor_x, self.cursor_y));
+
+        if self.help_popup {
+            let outer = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(vec![
+                    Constraint::Fill(1),
+                    Constraint::Length(20),
+                    Constraint::Fill(1),
+                ])
+                .split(frame.area());
+
+            let inner = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints(vec![
+                    Constraint::Fill(1),
+                    Constraint::Length(40),
+                    Constraint::Fill(1),
+                ])
+                .split(outer[1]);
+
+            let block = Block::bordered()
+                .title(Line::from(" Help ".bold()))
+                .border_set(border::THICK);
+
+            let paragraph = Paragraph::new("Test line").block(block);
+
+            frame.render_widget(Clear, inner[1]);
+            frame.render_widget(paragraph, inner[1]);
+        }
     }
 
     fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
@@ -193,6 +224,10 @@ impl App {
             KeyCode::Char('r') => {
                 self.running = !self.running;
                 self.next_tick = Instant::now();
+            }
+
+            KeyCode::Char('?') => {
+                self.help_popup = !self.help_popup;
             }
 
             _ => (),
