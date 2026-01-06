@@ -1,9 +1,9 @@
-use std::time::{Duration, Instant};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::prelude::{Rect, Stylize};
 use ratatui::symbols::border;
 use ratatui::widgets::Block;
 use ratatui::{self, DefaultTerminal, text::Line};
+use std::time::{Duration, Instant};
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
@@ -14,12 +14,19 @@ mod util;
 use life::*;
 use lifewidget::*;
 
+enum AppEvent {
+    Event(crossterm::event::Event),
+    Tick,
+}
+
 struct App {
     life_widget_rect: Rect,
     life: Life,
     cursor_x: u16,
     cursor_y: u16,
     running: bool,
+    tick_rate: Duration,
+    next_tick: Instant,
 }
 
 impl App {
@@ -30,6 +37,8 @@ impl App {
             cursor_x: 0,
             cursor_y: 0,
             running: false,
+            tick_rate: Duration::from_millis(20),
+            next_tick: Instant::now(),
         }
     }
 
@@ -64,24 +73,29 @@ impl App {
     }
 
     fn run(&mut self, mut terminal: DefaultTerminal) -> Result<()> {
-        let tick_rate = Duration::from_millis(250);
-        let mut next_tick = Instant::now() + tick_rate;
-
         self.init(&terminal)?;
 
         loop {
             terminal.draw(|frame| self.draw(frame))?;
 
             let now = Instant::now();
-            let timeout = if self.running {
-                next_tick.checked_duration_since(now).unwrap_or(Duration::ZERO)
+            let timeout = self
+                .next_tick
+                .checked_duration_since(now)
+                .unwrap_or(Duration::ZERO);
+
+            let app_event = if self.running {
+                if event::poll(timeout)? {
+                    AppEvent::Event(event::read()?)
+                } else {
+                    AppEvent::Tick
+                }
             } else {
-                //Duration::MAX  // This doesn't work for some reason
-                Duration::from_hours(99999)
+                AppEvent::Event(event::read()?)
             };
 
-            if event::poll(timeout)? {
-                match event::read()? {
+            match app_event {
+                AppEvent::Event(e) => match e {
                     Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                         if !self.handle_key_event(&key_event) {
                             break;
@@ -95,11 +109,12 @@ impl App {
                     }
 
                     _ => (),
+                },
+
+                AppEvent::Tick => {
+                    self.life.step();
+                    self.next_tick += self.tick_rate;
                 }
-            } else {
-                // Tick
-                self.life.step();
-                next_tick += tick_rate;
             }
         }
         Ok(())
@@ -177,6 +192,7 @@ impl App {
 
             KeyCode::Char('r') => {
                 self.running = !self.running;
+                self.next_tick = Instant::now();
             }
 
             _ => (),
