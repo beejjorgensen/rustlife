@@ -19,16 +19,16 @@ b j n
 
 ```
 s: Step
+r: Run start/stop
 t: Toggle cell
 c: Clear screen
-r: Randomize
+R: Randomize
 q: Quit
 ```
 
 ## TODO
 
 * Add keys and functionality:
-  * Run/stop
   * Help
   * About
 * Cheat sheet on bottom bar
