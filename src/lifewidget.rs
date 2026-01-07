@@ -77,7 +77,15 @@ impl Widget for &LifeWidget<'_> {
         let cells = self.life.get_cells();
 
         for (y, row) in cells.iter().enumerate() {
+            // There's a race where the window and widget might have resized before the Life
+            // object resized. We break off if we exceed the bounds.
+            if y as u16 >= inner.height {
+                break;
+            }
             for (x, cell) in row.iter().enumerate() {
+                if x as u16 >= inner.width {
+                    break;
+                }
                 match cell {
                     life::LifeCell::Alive => {
                         //buf[(x as u16, y as u16)].set_symbol("▒");
