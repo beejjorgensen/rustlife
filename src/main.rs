@@ -1,8 +1,12 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::prelude::{Constraint, Direction, Layout, Rect, Stylize};
-use ratatui::symbols::border;
-use ratatui::widgets::{Block, Clear, Paragraph};
-use ratatui::{self, DefaultTerminal, text::Line};
+use ratatui::{
+    self, DefaultTerminal,
+    layout::Flex,
+    prelude::{Constraint, Direction, Layout, Rect, Stylize},
+    symbols::border,
+    text::Line,
+    widgets::{Block, Clear, Paragraph},
+};
 use std::time::{Duration, Instant};
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -44,13 +48,6 @@ impl App {
         }
     }
 
-    fn start(&mut self) -> Result<()> {
-        let terminal = ratatui::init();
-        let result = self.run(terminal);
-        ratatui::restore();
-        result
-    }
-
     fn init(&mut self, terminal: &DefaultTerminal) -> Result<()> {
         let term_size = terminal.size()?;
 
@@ -74,8 +71,8 @@ impl App {
         Ok(())
     }
 
-    fn run(&mut self, mut terminal: DefaultTerminal) -> Result<()> {
-        self.init(&terminal)?;
+    fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
+        self.init(terminal)?;
 
         loop {
             terminal.draw(|frame| self.draw(frame))?;
@@ -142,21 +139,15 @@ impl App {
         if self.help_popup {
             let outer = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints(vec![
-                    Constraint::Fill(1),
-                    Constraint::Length(20),
-                    Constraint::Fill(1),
-                ])
+                .constraints(vec![Constraint::Length(20)])
+                .flex(Flex::Center)
                 .split(frame.area());
 
             let inner = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints(vec![
-                    Constraint::Fill(1),
-                    Constraint::Length(40),
-                    Constraint::Fill(1),
-                ])
-                .split(outer[1]);
+                .constraints(vec![Constraint::Length(40)])
+                .flex(Flex::Center)
+                .split(outer[0]);
 
             let block = Block::bordered()
                 .title(Line::from(" Help ".bold()))
@@ -164,8 +155,8 @@ impl App {
 
             let paragraph = Paragraph::new("Test line").block(block);
 
-            frame.render_widget(Clear, inner[1]);
-            frame.render_widget(paragraph, inner[1]);
+            frame.render_widget(Clear, inner[0]);
+            frame.render_widget(paragraph, inner[0]);
         }
     }
 
@@ -239,5 +230,6 @@ impl App {
 
 fn main() -> Result<()> {
     let mut app = App::new();
-    app.start()
+    ratatui::run(|terminal| app.run(terminal))?;
+    Ok(())
 }

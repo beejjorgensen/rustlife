@@ -28,7 +28,6 @@ q: Quit
 
 ## TODO
 
-* Update to 0.30.0
 * Add keys and functionality:
   * Help
   * About

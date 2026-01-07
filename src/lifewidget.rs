@@ -1,5 +1,7 @@
-use ratatui::prelude::{BlockExt, Buffer, Rect};
-use ratatui::widgets::{Block, Widget};
+use ratatui::{
+    prelude::{BlockExt, Buffer, Rect},
+    widgets::{Block, Widget},
+};
 
 use crate::life;
 
