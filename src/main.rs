@@ -18,23 +18,43 @@ mod util;
 use life::*;
 use lifewidget::*;
 
+/// Application-level events.
 enum AppEvent {
+    /// Normal crossterm event.
     Event(crossterm::event::Event),
+    /// Tick event.
     Tick,
 }
 
+/// Main application structure.
 struct App {
+    /// The dimensions of the main life widget.
     life_widget_rect: Rect,
+
+    /// The Life grid data structure.
     life: Life,
+
+    /// Cursor X position.
     cursor_x: u16,
+
+    /// Cursor Y position.
     cursor_y: u16,
+
+    /// True if the life simuation is in continuous-run mode.
     running: bool,
+
+    /// Delay between animation frames.
     tick_rate: Duration,
+
+    /// Time when the next tick should trigger.
     next_tick: Instant,
+
+    /// True if the help popup is active.
     help_popup: bool,
 }
 
 impl App {
+    /// Create a new App object.
     fn new() -> Self {
         Self {
             life_widget_rect: Rect::default(),
@@ -48,6 +68,7 @@ impl App {
         }
     }
 
+    /// Initialize various data structures.
     fn init(&mut self, terminal: &DefaultTerminal) -> Result<()> {
         let term_size = terminal.size()?;
 
@@ -71,6 +92,7 @@ impl App {
         Ok(())
     }
 
+    /// Run loop.
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         self.init(terminal)?;
 
@@ -119,6 +141,7 @@ impl App {
         Ok(())
     }
 
+    /// Main drawing method.
     fn draw(&mut self, frame: &mut ratatui::Frame) {
         let title = Line::from(" Life ".bold());
 
@@ -160,6 +183,7 @@ impl App {
         }
     }
 
+    /// Handle various key events.
     fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
         match key_event.code {
             KeyCode::Char('q') | KeyCode::Esc => {
@@ -228,6 +252,7 @@ impl App {
     }
 }
 
+/// Main.
 fn main() -> Result<()> {
     let mut app = App::new();
     ratatui::run(|terminal| app.run(terminal))?;
