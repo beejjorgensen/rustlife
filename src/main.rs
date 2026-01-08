@@ -101,6 +101,14 @@ impl App {
         loop {
             terminal.draw(|frame| self.draw(frame))?;
 
+            if self.help_popup {
+                terminal.hide_cursor()?;
+            } else {
+                terminal.show_cursor()?;
+            }
+
+            terminal.set_cursor_position((self.cursor_x, self.cursor_y))?;
+
             let now = Instant::now();
             let timeout = self
                 .next_tick
@@ -199,8 +207,6 @@ impl App {
 
         (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
 
-        frame.set_cursor_position((self.cursor_x, self.cursor_y));
-
         if self.help_popup {
             self.show_help_popup(frame);
         }
@@ -208,6 +214,11 @@ impl App {
 
     /// Handle various key events.
     fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
+        if self.help_popup {
+            self.help_popup = false;
+            return true;
+        }
+
         match key_event.code {
             KeyCode::Char('q') | KeyCode::Esc => {
                 return false;
@@ -265,7 +276,7 @@ impl App {
             }
 
             KeyCode::Char('?') => {
-                self.help_popup = !self.help_popup;
+                self.help_popup = true;
             }
 
             _ => (),

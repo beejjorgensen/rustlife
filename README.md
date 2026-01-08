@@ -29,7 +29,6 @@ q: Quit
 ## TODO
 
 * Add keys and functionality:
-  * Help
   * About
 * Colors
 * Doc comments
