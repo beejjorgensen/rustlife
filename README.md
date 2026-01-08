@@ -31,5 +31,3 @@ q: Quit
 * Add keys and functionality:
   * About
 * Colors
-* Doc comments
-
