@@ -7,16 +7,18 @@ use ratatui::{
     prelude::{Constraint, Direction, Layout, Rect, Stylize},
     symbols::border,
     text::Line,
-    widgets::{Block, Clear, Padding, Paragraph},
+    widgets::Block,
 };
 use std::time::{Duration, Instant};
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
+mod helpwidget;
 mod life;
 mod lifewidget;
 mod util;
 
+use helpwidget::*;
 use life::*;
 use lifewidget::*;
 
@@ -165,31 +167,8 @@ impl App {
             .flex(Flex::Center)
             .split(outer[0]);
 
-        let block = Block::bordered()
-            .title(Line::from(" Help ".bold()))
-            .title_bottom(Line::from(" Press any key ").centered())
-            .padding(Padding::uniform(1))
-            .border_set(border::THICK);
-
-        let text = vec![
-            "y k u".into(),
-            " \\|/".into(),
-            "h-+-l  Cursor movement".into(),
-            " /|\\".into(),
-            "b j n  (or arrow keys)".into(),
-            "".into(),
-            "t: Toggle cell".into(),
-            "s: Step".into(),
-            "r: Run start/stop".into(),
-            "c: Clear screen".into(),
-            "R: Randomize".into(),
-            "q: Quit".into(),
-        ];
-
-        let paragraph = Paragraph::new(text).block(block);
-
-        frame.render_widget(Clear, inner[0]);
-        frame.render_widget(paragraph, inner[0]);
+        let help = HelpWidget::new();
+        frame.render_widget(help, inner[0]);
     }
 
     /// Main drawing method.
