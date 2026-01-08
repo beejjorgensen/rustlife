@@ -7,7 +7,7 @@ use ratatui::{
     prelude::{Constraint, Direction, Layout, Rect, Stylize},
     symbols::border,
     text::Line,
-    widgets::{Block, Clear, Paragraph},
+    widgets::{Block, Clear, Padding, Paragraph},
 };
 use std::time::{Duration, Instant};
 
@@ -147,21 +147,38 @@ impl App {
     fn show_help_popup(&self, frame: &mut ratatui::Frame) {
         let outer = Layout::default()
             .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(20)])
+            .constraints(vec![Constraint::Length(16)])
             .flex(Flex::Center)
             .split(frame.area());
 
         let inner = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(vec![Constraint::Length(40)])
+            .constraints(vec![Constraint::Length(26)])
             .flex(Flex::Center)
             .split(outer[0]);
 
         let block = Block::bordered()
             .title(Line::from(" Help ".bold()))
+            .title_bottom(Line::from(" Press any key ").centered())
+            .padding(Padding::uniform(1))
             .border_set(border::THICK);
 
-        let paragraph = Paragraph::new("Test line").block(block);
+        let text = vec![
+            "y k u".into(),
+            " \\|/".into(),
+            "h-+-l  Cursor movement".into(),
+            " /|\\".into(),
+            "b j n  (or arrow keys)".into(),
+            "".into(),
+            "t: Toggle cell".into(),
+            "s: Step".into(),
+            "r: Run start/stop".into(),
+            "c: Clear screen".into(),
+            "R: Randomize".into(),
+            "q: Quit".into(),
+        ];
+
+        let paragraph = Paragraph::new(text).block(block);
 
         frame.render_widget(Clear, inner[0]);
         frame.render_widget(paragraph, inner[0]);
