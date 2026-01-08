@@ -233,15 +233,18 @@ impl App {
             }
 
             KeyCode::Char('s') => {
+                self.running = false;
                 self.life.step();
             }
 
             KeyCode::Char(' ') | KeyCode::Char('t') => {
+                self.running = false;
                 self.life
                     .toggle(self.cursor_x as usize - 1, self.cursor_y as usize - 1);
             }
 
             KeyCode::Char('c') => {
+                self.running = false;
                 self.life.clear();
             }
 
