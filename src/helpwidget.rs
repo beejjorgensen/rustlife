@@ -1,3 +1,11 @@
+//! This widget draws the help window.
+//!
+//! Example:
+//!
+//! ```
+//! let help = HelpWidget::new();
+//! frame.render_widget(help, inner[0]);
+//! ```
 use ratatui::{
     prelude::{Buffer, Rect, Stylize},
     symbols::border,
@@ -5,9 +13,11 @@ use ratatui::{
     widgets::{Block, Clear, Padding, Paragraph, Widget},
 };
 
+/// A HelpWidget.
 pub struct HelpWidget {}
 
 impl HelpWidget {
+    /// Construct a new HelpWidget.
     pub fn new() -> Self {
         HelpWidget {}
     }
@@ -46,7 +56,7 @@ impl Widget for &HelpWidget {
 
         let paragraph = Paragraph::new(text).block(block);
 
-        Widget::render(Clear {}, area, buf);
+        Widget::render(Clear, area, buf);
 
         paragraph.render(area, buf);
     }
