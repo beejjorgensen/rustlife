@@ -143,12 +143,35 @@ impl App {
         Ok(())
     }
 
-    /// Main drawing method.
-    fn draw(&mut self, frame: &mut ratatui::Frame) {
-        let title = Line::from(" Life ".bold());
+    /// Render the help popup
+    fn show_help_popup(&self, frame: &mut ratatui::Frame) {
+        let outer = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![Constraint::Length(20)])
+            .flex(Flex::Center)
+            .split(frame.area());
+
+        let inner = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints(vec![Constraint::Length(40)])
+            .flex(Flex::Center)
+            .split(outer[0]);
 
         let block = Block::bordered()
-            .title(title.centered())
+            .title(Line::from(" Help ".bold()))
+            .border_set(border::THICK);
+
+        let paragraph = Paragraph::new("Test line").block(block);
+
+        frame.render_widget(Clear, inner[0]);
+        frame.render_widget(paragraph, inner[0]);
+    }
+
+    /// Main drawing method.
+    fn draw(&mut self, frame: &mut ratatui::Frame) {
+        let block = Block::bordered()
+            .title(Line::from(" Life ".bold()).centered())
+            .title_bottom(Line::from(" q→Quit | ?→Help ").centered())
             .border_set(border::THICK);
 
         let life_widget = LifeWidget::new(&self.life).block(block);
@@ -162,26 +185,7 @@ impl App {
         frame.set_cursor_position((self.cursor_x, self.cursor_y));
 
         if self.help_popup {
-            let outer = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints(vec![Constraint::Length(20)])
-                .flex(Flex::Center)
-                .split(frame.area());
-
-            let inner = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints(vec![Constraint::Length(40)])
-                .flex(Flex::Center)
-                .split(outer[0]);
-
-            let block = Block::bordered()
-                .title(Line::from(" Help ".bold()))
-                .border_set(border::THICK);
-
-            let paragraph = Paragraph::new("Test line").block(block);
-
-            frame.render_widget(Clear, inner[0]);
-            frame.render_widget(paragraph, inner[0]);
+            self.show_help_popup(frame);
         }
     }
 

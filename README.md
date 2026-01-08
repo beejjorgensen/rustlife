@@ -31,7 +31,6 @@ q: Quit
 * Add keys and functionality:
   * Help
   * About
-* Cheat sheet on bottom bar
 * Colors
 * Doc comments
 
