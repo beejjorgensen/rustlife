@@ -23,6 +23,7 @@ r: Run start/stop
 t: Toggle cell
 c: Clear screen
 R: Randomize
+?: Help
 q: Quit
 ```
 
