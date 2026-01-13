@@ -191,13 +191,14 @@ impl App {
         }
     }
 
-    /// Handle various key events.
-    fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
-        if self.help_popup {
-            self.help_popup = false;
-            return true;
-        }
+    /// Handle key events in the help popup.
+    fn handle_key_event_help(&mut self, _key_event: &KeyEvent) -> bool {
+        self.help_popup = false;
+        true
+    }
 
+    /// Handle key events for the life window.
+    fn handle_key_event_life(&mut self, key_event: &KeyEvent) -> bool {
         match key_event.code {
             KeyCode::Char('q') | KeyCode::Esc => {
                 return false;
@@ -265,6 +266,15 @@ impl App {
         }
 
         true
+    }
+
+    /// Main key event handler.
+    fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
+        if self.help_popup {
+            self.handle_key_event_help(key_event)
+        } else {
+            self.handle_key_event_life(key_event)
+        }
     }
 }
 
