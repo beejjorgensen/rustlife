@@ -55,6 +55,9 @@ struct App {
 
     /// True if the help popup is active.
     help_popup: bool,
+
+    /// Tracker for prefix count on some commands
+    count: u32,
 }
 
 impl App {
@@ -69,6 +72,7 @@ impl App {
             tick_rate: Duration::from_millis(20),
             next_tick: Instant::now(),
             help_popup: false,
+            count: 0,
         }
     }
 
@@ -211,7 +215,16 @@ impl App {
                 self.cursor_y += 1;
             }
             KeyCode::Left | KeyCode::Char('h') => {
-                self.cursor_x -= 1;
+                if self.count > 0 {
+                    self.running = false;
+                    self.life.horizontal_line(
+                        self.cursor_x as usize - 1,
+                        self.cursor_y as usize - 1,
+                        self.count,
+                    );
+                } else {
+                    self.cursor_x -= 1;
+                }
             }
             KeyCode::Right | KeyCode::Char('l') => {
                 self.cursor_x += 1;
@@ -263,6 +276,17 @@ impl App {
             }
 
             _ => (),
+        }
+
+        match key_event.code {
+            KeyCode::Char(c) if c.is_ascii_digit() => {
+                let value = c.to_digit(10).unwrap();
+                self.count = self.count * 10 + value;
+            }
+
+            _ => {
+                self.count = 0;
+            }
         }
 
         true

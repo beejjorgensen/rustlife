@@ -109,6 +109,19 @@ impl Life {
         }
     }
 
+    /// Draw a horizontal line
+    pub fn horizontal_line(&mut self, x: usize, y: usize, length: u32) {
+        let startx = (x + self.width - length as usize / 2) % self.width;
+        let endx = startx + length as usize;
+
+        let y = y % self.height;
+
+        for i in startx..endx {
+            let x = i % self.width;
+            self.set_cell(x, y, LifeCell::Alive);
+        }
+    }
+
     /// Single step the life simuation.
     pub fn step(&mut self) {
         let other_page = if self.cur_page == 0 { 1 } else { 0 };
