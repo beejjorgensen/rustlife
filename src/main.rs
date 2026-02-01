@@ -1,13 +1,7 @@
 //! Implementation of [Conway's Game of
 //! Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) using [Ratatui](ratatui.rs).
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{
-    self, DefaultTerminal,
-    prelude::{Rect, Stylize},
-    symbols::border,
-    text::Line,
-    widgets::Block,
-};
+use crossterm::event;
+use ratatui::{self, DefaultTerminal};
 use std::time::{Duration, Instant};
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -17,9 +11,7 @@ mod util;
 mod widgets;
 mod windows;
 
-use life::Life;
-use widgets::LifeWidget;
-use windows::{HelpWindow, Window, WindowResult};
+use windows::{HelpWindow, LifeWindow, Window, WindowDrawResult};
 
 /// Application-level events.
 enum AppEvent {
@@ -29,102 +21,113 @@ enum AppEvent {
     Tick,
 }
 
+#[derive(PartialEq)]
+/// Returned from handling events to control the main app.
+pub enum AppCommand {
+    TimerStart(Duration), // Tick immediately
+    TimerStop,
+    TimerContinue,
+    HelpPopup, // TODO generalize to arbitrary popups
+    Quit,
+}
+
+/// Commands back to the app from event handlers
+/// TODO break this into other source?
+struct AppCommands(Vec<AppCommand>);
+
+impl AppCommands {
+    pub fn none() -> Self {
+        Self(Vec::new())
+    }
+
+    pub fn one(command: AppCommand) -> Self {
+        Self(vec![command])
+    }
+
+    pub fn push(&mut self, command: AppCommand) {
+        self.0.push(command);
+    }
+
+    pub fn append(&mut self, app_commands: &mut AppCommands) {
+        self.0.append(&mut app_commands.0);
+    }
+}
+
+impl IntoIterator for AppCommands {
+    type Item = AppCommand;
+    type IntoIter = std::vec::IntoIter<AppCommand>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a AppCommands {
+    type Item = &'a AppCommand;
+    type IntoIter = std::slice::Iter<'a, AppCommand>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
+}
+
 /// Main application structure.
 struct App {
-    /// The dimensions of the main life widget.
-    life_widget_rect: Rect,
-
-    /// The Life grid data structure.
-    life: Life,
-
-    /// Cursor X position.
-    cursor_x: u16,
-
-    /// Cursor Y position.
-    cursor_y: u16,
-
-    /// True if the life simuation is in continuous-run mode.
-    running: bool,
-
     /// Delay between animation frames.
     tick_rate: Duration,
 
     /// Time when the next tick should trigger.
-    next_tick: Instant,
+    next_tick: Option<Instant>,
 
-    /// Reference to the HelpWindow
+    /// Reference to the main Life window
+    life_window: LifeWindow,
+
+    /// Reference to the Help window
     help_window: HelpWindow,
 
     /// True if the help popup is active.
     help_popup: bool,
-
-    /// Tracker for prefix count on some commands
-    count: u32,
 }
 
 impl App {
     /// Create a new App object.
     fn new() -> Self {
         Self {
-            life_widget_rect: Rect::default(),
-            life: Life::new(),
-            cursor_x: 0,
-            cursor_y: 0,
-            running: false,
             tick_rate: Duration::from_millis(20),
-            next_tick: Instant::now(),
+            next_tick: None,
+            life_window: LifeWindow::new(),
             help_window: HelpWindow {},
             help_popup: false,
-            count: 0,
         }
-    }
-
-    /// Initialize various data structures.
-    fn init(&mut self, terminal: &DefaultTerminal) -> Result<()> {
-        let term_size = terminal.size()?;
-
-        self.life_widget_rect = Rect {
-            x: 0,
-            y: 0,
-            width: term_size.width,
-            height: term_size.height,
-        };
-
-        self.life.init(
-            self.life_widget_rect.width as usize - 2,
-            self.life_widget_rect.height as usize - 2,
-        );
-
-        self.life.randomize();
-
-        self.cursor_x = self.life_widget_rect.width / 2 + self.life_widget_rect.x;
-        self.cursor_y = self.life_widget_rect.height / 2 + self.life_widget_rect.y;
-
-        Ok(())
     }
 
     /// Run loop.
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        self.init(terminal)?;
+        let terminal_size = terminal.size()?;
 
-        loop {
-            terminal.draw(|frame| self.draw(frame))?;
+        self.life_window.init(&terminal_size);
 
-            if self.help_popup {
-                terminal.hide_cursor()?;
-            } else {
-                terminal.show_cursor()?;
+        'outer: loop {
+            let mut draw_result = None;
+
+            terminal.draw(|frame| draw_result = self.draw(frame))?;
+
+            if let Some(dr) = draw_result {
+                if dr.cursor_visible {
+                    terminal.show_cursor()?;
+                } else {
+                    terminal.hide_cursor()?;
+                }
+
+                terminal.set_cursor_position((dr.cursor_x, dr.cursor_y))?;
             }
 
-            terminal.set_cursor_position((self.cursor_x, self.cursor_y))?;
+            let app_event = if let Some(next_tick) = self.next_tick {
+                let now = Instant::now();
+                let timeout = next_tick
+                    .checked_duration_since(now)
+                    .unwrap_or(Duration::ZERO);
 
-            let now = Instant::now();
-            let timeout = self
-                .next_tick
-                .checked_duration_since(now)
-                .unwrap_or(Duration::ZERO);
-
-            let app_event = if self.running {
                 if event::poll(timeout)? {
                     AppEvent::Event(event::read()?)
                 } else {
@@ -134,153 +137,49 @@ impl App {
                 AppEvent::Event(event::read()?)
             };
 
-            match app_event {
-                AppEvent::Event(e) => match e {
-                    Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                        if !self.handle_key_event(&key_event) {
-                            break;
+            // Route events to windows
+            // TODO generalize away from help_popup
+            if self.help_popup {
+                let app_commands = self.help_window.handle_app_event(&app_event);
+                for command in &app_commands {
+                    if command == &AppCommand::Quit {
+                        self.help_popup = false;
+                    }
+                }
+            } else {
+                // Main app
+                let app_commands = self.life_window.handle_app_event(&app_event);
+
+                for command in &app_commands {
+                    match command {
+                        AppCommand::Quit => break 'outer,
+
+                        AppCommand::TimerStart(duration) => {
+                            self.tick_rate = *duration;
+                            self.next_tick = Some(Instant::now());
                         }
+
+                        AppCommand::TimerStop => self.next_tick = None,
+
+                        AppCommand::HelpPopup => self.help_popup = true,
+
+                        _ => (),
                     }
-
-                    Event::Resize(width, height) => {
-                        self.life_widget_rect.width = width;
-                        self.life_widget_rect.height = height;
-                        self.life.resize(width as usize - 2, height as usize - 2);
-                    }
-
-                    _ => (),
-                },
-
-                AppEvent::Tick => {
-                    self.life.step();
-                    self.next_tick += self.tick_rate;
                 }
             }
-        }
+        } // 'outer
         Ok(())
     }
 
     /// Main drawing method.
-    fn draw(&mut self, frame: &mut ratatui::Frame) {
-        let block = Block::bordered()
-            .title(Line::from(" Life ".bold()).centered())
-            .title_bottom(Line::from(" q→Quit | ?→Help ").centered())
-            .border_set(border::THICK);
-
-        let life_widget = LifeWidget::new(&self.life).block(block);
-
-        let inner = life_widget.inner(frame.area());
-
-        frame.render_widget(life_widget, frame.area());
-
-        (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
+    fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
+        let mut draw_result = self.life_window.draw(frame);
 
         if self.help_popup {
-            self.help_window.draw(frame);
-        }
-    }
-
-    /// Handle key events for the life window.
-    fn handle_key_event_life(&mut self, key_event: &KeyEvent) -> bool {
-        match key_event.code {
-            KeyCode::Char('q') | KeyCode::Esc => {
-                return false;
-            }
-
-            KeyCode::Up | KeyCode::Char('k') => {
-                self.cursor_y -= 1;
-            }
-            KeyCode::Down | KeyCode::Char('j') => {
-                self.cursor_y += 1;
-            }
-            KeyCode::Left | KeyCode::Char('h') => {
-                if self.count > 0 {
-                    self.running = false;
-                    self.life.horizontal_line(
-                        self.cursor_x as usize - 1,
-                        self.cursor_y as usize - 1,
-                        self.count,
-                    );
-                } else {
-                    self.cursor_x -= 1;
-                }
-            }
-            KeyCode::Right | KeyCode::Char('l') => {
-                self.cursor_x += 1;
-            }
-            KeyCode::Char('y') => {
-                self.cursor_x -= 1;
-                self.cursor_y -= 1;
-            }
-            KeyCode::Char('u') => {
-                self.cursor_x += 1;
-                self.cursor_y -= 1;
-            }
-            KeyCode::Char('b') => {
-                self.cursor_x -= 1;
-                self.cursor_y += 1;
-            }
-            KeyCode::Char('n') => {
-                self.cursor_x += 1;
-                self.cursor_y += 1;
-            }
-
-            KeyCode::Char('s') => {
-                self.running = false;
-                self.life.step();
-            }
-
-            KeyCode::Char(' ') | KeyCode::Char('t') => {
-                self.running = false;
-                self.life
-                    .toggle(self.cursor_x as usize - 1, self.cursor_y as usize - 1);
-            }
-
-            KeyCode::Char('c') => {
-                self.running = false;
-                self.life.clear();
-            }
-
-            KeyCode::Char('R') => {
-                self.life.randomize();
-            }
-
-            KeyCode::Char('r') => {
-                self.running = !self.running;
-                self.next_tick = Instant::now();
-            }
-
-            KeyCode::Char('?') => {
-                self.help_popup = true;
-            }
-
-            _ => (),
+            draw_result = self.help_window.draw(frame);
         }
 
-        match key_event.code {
-            KeyCode::Char(c) if c.is_ascii_digit() => {
-                let value = c.to_digit(10).unwrap();
-                self.count = self.count * 10 + value;
-            }
-
-            _ => {
-                self.count = 0;
-            }
-        }
-
-        true
-    }
-
-    /// Main key event handler.
-    fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
-        if self.help_popup {
-            if let Some(WindowResult::Quit) = self.help_window.handle_key_event(key_event) {
-                self.help_popup = false;
-            }
-            true // TODO cruft
-        } else {
-            self.handle_key_event_life(key_event)
-        }
+        draw_result
     }
 }
 

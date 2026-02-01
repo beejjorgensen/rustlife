@@ -1,6 +1,9 @@
-use crate::widgets::HelpWidget;
-use crate::windows::{Window, WindowResult};
-use crossterm::event::KeyEvent;
+use crate::{
+    AppCommand, AppCommands, AppEvent,
+    widgets::HelpWidget,
+    windows::{Window, WindowDrawResult},
+};
+use crossterm::event::{Event, KeyEventKind};
 use ratatui::{
     layout::Flex,
     prelude::{Constraint, Direction, Layout},
@@ -9,7 +12,8 @@ use ratatui::{
 pub struct HelpWindow;
 
 impl Window for HelpWindow {
-    fn draw(&mut self, frame: &mut ratatui::Frame) {
+    /// Draw the Help Window.
+    fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
         let outer = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vec![Constraint::Length(16)])
@@ -24,9 +28,22 @@ impl Window for HelpWindow {
 
         let help = HelpWidget::new();
         frame.render_widget(help, inner[0]);
+
+        Some(WindowDrawResult::cursor_hide())
     }
 
-    fn handle_key_event(&mut self, _key_event: &KeyEvent) -> Option<WindowResult> {
-        Some(WindowResult::Quit)
+    /// Handle app events for the Help Window.
+    fn handle_app_event(&mut self, app_event: &AppEvent) -> AppCommands {
+        match app_event {
+            AppEvent::Event(e) => match e {
+                Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    AppCommands::one(AppCommand::Quit)
+                }
+
+                _ => AppCommands::none(),
+            },
+
+            _ => AppCommands::none(),
+        }
     }
 }

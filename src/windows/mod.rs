@@ -1,5 +1,7 @@
 mod help;
+mod life;
 mod window;
 
 pub use help::HelpWindow;
-pub use window::{Window, WindowResult};
+pub use life::LifeWindow;
+pub use window::{Window, WindowDrawResult};
