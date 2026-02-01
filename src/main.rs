@@ -131,6 +131,7 @@ impl App {
                 if event::poll(timeout)? {
                     AppEvent::Event(event::read()?)
                 } else {
+                    self.next_tick = Some(next_tick + self.tick_rate);
                     AppEvent::Tick
                 }
             } else {
