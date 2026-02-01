@@ -3,8 +3,7 @@
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     self, DefaultTerminal,
-    layout::Flex,
-    prelude::{Constraint, Direction, Layout, Rect, Stylize},
+    prelude::{Rect, Stylize},
     symbols::border,
     text::Line,
     widgets::Block,
@@ -16,9 +15,11 @@ pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 mod life;
 mod util;
 mod widgets;
+mod windows;
 
 use life::Life;
-use widgets::{HelpWidget, LifeWidget};
+use widgets::LifeWidget;
+use windows::{HelpWindow, Window, WindowResult};
 
 /// Application-level events.
 enum AppEvent {
@@ -51,6 +52,9 @@ struct App {
     /// Time when the next tick should trigger.
     next_tick: Instant,
 
+    /// Reference to the HelpWindow
+    help_window: HelpWindow,
+
     /// True if the help popup is active.
     help_popup: bool,
 
@@ -69,6 +73,7 @@ impl App {
             running: false,
             tick_rate: Duration::from_millis(20),
             next_tick: Instant::now(),
+            help_window: HelpWindow {},
             help_popup: false,
             count: 0,
         }
@@ -155,24 +160,6 @@ impl App {
         Ok(())
     }
 
-    /// Render the help popup
-    fn show_help_popup(&self, frame: &mut ratatui::Frame) {
-        let outer = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(16)])
-            .flex(Flex::Center)
-            .split(frame.area());
-
-        let inner = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints(vec![Constraint::Length(26)])
-            .flex(Flex::Center)
-            .split(outer[0]);
-
-        let help = HelpWidget::new();
-        frame.render_widget(help, inner[0]);
-    }
-
     /// Main drawing method.
     fn draw(&mut self, frame: &mut ratatui::Frame) {
         let block = Block::bordered()
@@ -189,14 +176,8 @@ impl App {
         (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
 
         if self.help_popup {
-            self.show_help_popup(frame);
+            self.help_window.draw(frame);
         }
-    }
-
-    /// Handle key events in the help popup.
-    fn handle_key_event_help(&mut self, _key_event: &KeyEvent) -> bool {
-        self.help_popup = false;
-        true
     }
 
     /// Handle key events for the life window.
@@ -293,7 +274,10 @@ impl App {
     /// Main key event handler.
     fn handle_key_event(&mut self, key_event: &KeyEvent) -> bool {
         if self.help_popup {
-            self.handle_key_event_help(key_event)
+            if let Some(WindowResult::Quit) = self.help_window.handle_key_event(key_event) {
+                self.help_popup = false;
+            }
+            true // TODO cruft
         } else {
             self.handle_key_event_life(key_event)
         }
