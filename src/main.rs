@@ -13,14 +13,12 @@ use std::time::{Duration, Instant};
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-mod helpwidget;
 mod life;
-mod lifewidget;
 mod util;
+mod widgets;
 
-use helpwidget::*;
-use life::*;
-use lifewidget::*;
+use life::Life;
+use widgets::{HelpWidget, LifeWidget};
 
 /// Application-level events.
 enum AppEvent {
