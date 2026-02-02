@@ -1,5 +1,5 @@
 use crate::{
-    AppCommand, AppCommands, AppEvent,
+    AppCommand, AppCommands, AppEvent, AppEventType,
     life::Life,
     util,
     widgets::LifeWidget,
@@ -176,11 +176,11 @@ impl Window for LifeWindow {
         ))
     }
 
-    fn handle_app_event(&mut self, app_event: &AppEvent) -> AppCommands {
+    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> AppCommands {
         let mut app_commands = AppCommands::none();
 
-        match app_event {
-            AppEvent::Event(e) => match e {
+        match &app_event.event_type {
+            AppEventType::Event(e) => match e {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                     app_commands.append(&mut self.handle_key_event(key_event));
                 }
@@ -192,7 +192,7 @@ impl Window for LifeWindow {
                 _ => (),
             },
 
-            AppEvent::Tick => {
+            AppEventType::Tick => {
                 self.life.step();
             }
         }

@@ -10,7 +10,7 @@ pub trait Window {
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult>;
 
     /// Handle application events.
-    fn handle_app_event(&mut self, _app_event: &AppEvent) -> AppCommands {
+    fn handle_app_event(&mut self, _app_event: &mut AppEvent) -> AppCommands {
         AppCommands::none()
     }
 }

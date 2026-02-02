@@ -1,5 +1,5 @@
 use crate::{
-    AppCommand, AppCommands, AppEvent,
+    AppCommand, AppCommands, AppEvent, AppEventType,
     widgets::HelpWidget,
     windows::{Window, WindowDrawResult},
 };
@@ -33,10 +33,11 @@ impl Window for HelpWindow {
     }
 
     /// Handle app events for the Help Window.
-    fn handle_app_event(&mut self, app_event: &AppEvent) -> AppCommands {
-        match app_event {
-            AppEvent::Event(e) => match e {
+    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> AppCommands {
+        match &app_event.event_type {
+            AppEventType::Event(e) => match e {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    app_event.propagate = false;
                     AppCommands::one(AppCommand::Quit)
                 }
 

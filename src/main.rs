@@ -13,13 +13,29 @@ mod windows;
 
 use windows::{HelpWindow, LifeWindow, Window, WindowDrawResult};
 
-/// Application-level events.
+/// Application-level event types.
 #[derive(PartialEq)]
-enum AppEvent {
+enum AppEventType {
     /// Normal crossterm event.
     Event(crossterm::event::Event),
     /// Tick event.
     Tick,
+}
+
+/// Application-level events.
+struct AppEvent {
+    pub event_type: AppEventType,
+    pub propagate: bool,
+}
+
+impl AppEvent {
+    /// Construct a new AppEvent
+    fn new(event_type: AppEventType) -> Self {
+        AppEvent {
+            event_type,
+            propagate: true,
+        }
+    }
 }
 
 #[derive(PartialEq)]
@@ -123,26 +139,26 @@ impl App {
                 terminal.set_cursor_position((dr.cursor_x, dr.cursor_y))?;
             }
 
-            let app_event = if let Some(next_tick) = self.next_tick {
+            let mut app_event = if let Some(next_tick) = self.next_tick {
                 let now = Instant::now();
                 let timeout = next_tick
                     .checked_duration_since(now)
                     .unwrap_or(Duration::ZERO);
 
                 if event::poll(timeout)? {
-                    AppEvent::Event(event::read()?)
+                    AppEvent::new(AppEventType::Event(event::read()?))
                 } else {
                     self.next_tick = Some(next_tick + self.tick_rate);
-                    AppEvent::Tick
+                    AppEvent::new(AppEventType::Tick)
                 }
             } else {
-                AppEvent::Event(event::read()?)
+                AppEvent::new(AppEventType::Event(event::read()?))
             };
 
             // Route events to windows
-            // TODO generalize away from help_popup
+            // TODO generalize away from help_popup, make a window stack
             if self.help_popup {
-                let app_commands = self.help_window.handle_app_event(&app_event);
+                let app_commands = self.help_window.handle_app_event(&mut app_event);
                 for command in &app_commands {
                     if command == &AppCommand::Quit {
                         self.help_popup = false;
@@ -155,9 +171,9 @@ impl App {
                 }
             }
 
-            if !self.help_popup || app_event == AppEvent::Tick {
+            if app_event.propagate {
                 // Main app
-                let app_commands = self.life_window.handle_app_event(&app_event);
+                let app_commands = self.life_window.handle_app_event(&mut app_event);
 
                 for command in &app_commands {
                     match command {
