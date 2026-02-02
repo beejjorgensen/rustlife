@@ -45,6 +45,9 @@ pub enum AppCommand {
     TimerStop,
     TimerContinue,
     HelpPopup, // TODO generalize to arbitrary popups
+    CursorHide,
+    CursorShow,
+    CursorPosition(u16, u16), // Implies "CursorShow"
     Close,
     Quit,
 }
@@ -194,6 +197,15 @@ impl App {
                         AppCommand::TimerStop => self.next_tick = None,
 
                         AppCommand::HelpPopup => self.help_popup = true,
+
+                        AppCommand::CursorHide => (), //terminal.hide_cursor()?,
+
+                        AppCommand::CursorShow => terminal.show_cursor()?,
+
+                        AppCommand::CursorPosition(x, y) => {
+                            terminal.set_cursor_position((*x, *y))?;
+                            terminal.show_cursor()?;
+                        }
 
                         _ => (),
                     }
