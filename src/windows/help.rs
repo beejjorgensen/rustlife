@@ -9,6 +9,7 @@ use ratatui::{
     prelude::{Constraint, Direction, Layout},
 };
 
+/// Window to show the HelpWidget.
 pub struct HelpWindow;
 
 impl Window for HelpWindow {

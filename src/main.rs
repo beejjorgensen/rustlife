@@ -53,18 +53,22 @@ pub enum AppCommand {
 struct AppCommands(Vec<AppCommand>);
 
 impl AppCommands {
+    /// Create a no-op AppCommands.
     pub fn none() -> Self {
         Self(Vec::new())
     }
 
+    /// Create an AppCommands with a single AppCommand.
     pub fn one(command: AppCommand) -> Self {
         Self(vec![command])
     }
 
+    /// Append another AppCommand.
     pub fn push(&mut self, command: AppCommand) {
         self.0.push(command);
     }
 
+    /// Append another set of AppCommands.
     pub fn append(&mut self, app_commands: &mut AppCommands) {
         self.0.append(&mut app_commands.0);
     }
@@ -74,6 +78,7 @@ impl IntoIterator for AppCommands {
     type Item = AppCommand;
     type IntoIter = std::vec::IntoIter<AppCommand>;
 
+    /// Return a moving iterator.
     fn into_iter(self) -> Self::IntoIter {
         self.0.into_iter()
     }
@@ -83,6 +88,7 @@ impl<'a> IntoIterator for &'a AppCommands {
     type Item = &'a AppCommand;
     type IntoIter = std::slice::Iter<'a, AppCommand>;
 
+    /// Return a borrowing iterator.
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
     }

@@ -16,7 +16,7 @@
 //!
 //!frame.render_widget(life_widget, frame.area());
 //!```
-//![`Life`]: crate::Life
+//![`Life`]: crate::life::Life
 use ratatui::{
     prelude::{BlockExt, Buffer, Rect},
     widgets::{Block, Widget},

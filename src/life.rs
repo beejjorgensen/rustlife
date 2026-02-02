@@ -186,6 +186,7 @@ impl Life {
 }
 
 impl Default for Life {
+    /// Create a default Life object.
     fn default() -> Self {
         Self::new()
     }

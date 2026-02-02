@@ -24,8 +24,8 @@ pub struct WindowDrawResult {
 }
 
 impl Default for WindowDrawResult {
-    // TODO make AppCommand?
     /// Make a new default WindowDrawResult.
+    // TODO make AppCommand?
     fn default() -> Self {
         Self {
             cursor_x: 0,

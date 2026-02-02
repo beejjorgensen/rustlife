@@ -9,6 +9,7 @@ use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{layout::Size, prelude::Stylize, symbols::border, text::Line, widgets::Block};
 use std::time::Duration;
 
+/// Window to show the Life grid.
 pub struct LifeWindow {
     /// The Life grid data structure.
     life: Life,
@@ -27,6 +28,7 @@ pub struct LifeWindow {
 }
 
 impl LifeWindow {
+    /// Create a new LifeWindow.
     pub fn new() -> LifeWindow {
         LifeWindow {
             life: Life::new(),
@@ -176,6 +178,7 @@ impl Window for LifeWindow {
         ))
     }
 
+    /// Handle application events.
     fn handle_app_event(&mut self, app_event: &mut AppEvent) -> AppCommands {
         let mut app_commands = AppCommands::none();
 
