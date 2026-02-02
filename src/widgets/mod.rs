@@ -1,5 +1,5 @@
-mod helpwidget;
-mod lifewidget;
+mod help;
+mod life;
 
-pub use helpwidget::HelpWidget;
-pub use lifewidget::LifeWidget;
+pub use help::HelpWidget;
+pub use life::LifeWidget;
