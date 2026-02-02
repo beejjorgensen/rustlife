@@ -193,7 +193,7 @@ impl App {
 
                         AppCommand::HelpPopup => self.help_popup = true,
 
-                        AppCommand::CursorHide => (), //terminal.hide_cursor()?,
+                        AppCommand::CursorHide => terminal.hide_cursor()?,
 
                         AppCommand::CursorShow => terminal.show_cursor()?,
 
