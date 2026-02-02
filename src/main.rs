@@ -172,11 +172,6 @@ impl App {
                 for command in &app_commands {
                     if command == &AppCommand::Close {
                         self.help_popup = false;
-
-                        // If I don't continue here (hackish af), a key event that's supposedly
-                        // eaten by the help window still goes through to the life window, below.
-                        // We need like a "StopPropagation" command or something.
-                        continue 'outer;
                     }
                 }
             }
