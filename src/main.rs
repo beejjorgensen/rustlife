@@ -45,6 +45,7 @@ pub enum AppCommand {
     TimerStop,
     TimerContinue,
     HelpPopup, // TODO generalize to arbitrary popups
+    Close,
     Quit,
 }
 
@@ -166,7 +167,7 @@ impl App {
             if self.help_popup {
                 let app_commands = self.help_window.handle_app_event(&mut app_event);
                 for command in &app_commands {
-                    if command == &AppCommand::Quit {
+                    if command == &AppCommand::Close {
                         self.help_popup = false;
 
                         // If I don't continue here (hackish af), a key event that's supposedly

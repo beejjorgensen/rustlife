@@ -39,7 +39,7 @@ impl Window for HelpWindow {
             AppEventType::Event(e) => match e {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                     app_event.propagate = false;
-                    AppCommands::one(AppCommand::Quit)
+                    AppCommands::one(AppCommand::Close)
                 }
 
                 _ => AppCommands::none(),
