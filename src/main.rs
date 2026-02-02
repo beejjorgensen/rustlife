@@ -14,6 +14,7 @@ mod windows;
 use windows::{HelpWindow, LifeWindow, Window, WindowDrawResult};
 
 /// Application-level events.
+#[derive(PartialEq)]
 enum AppEvent {
     /// Normal crossterm event.
     Event(crossterm::event::Event),
@@ -145,9 +146,16 @@ impl App {
                 for command in &app_commands {
                     if command == &AppCommand::Quit {
                         self.help_popup = false;
+
+                        // If I don't continue here (hackish af), a key event that's supposedly
+                        // eaten by the help window still goes through to the life window, below.
+                        // We need like a "StopPropagation" command or something.
+                        continue 'outer;
                     }
                 }
-            } else {
+            }
+
+            if !self.help_popup || app_event == AppEvent::Tick {
                 // Main app
                 let app_commands = self.life_window.handle_app_event(&app_event);
 
