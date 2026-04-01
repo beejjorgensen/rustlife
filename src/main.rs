@@ -11,7 +11,7 @@ mod util;
 mod widgets;
 mod windows;
 
-use windows::{HelpWindow, LifeWindow, Window, WindowDrawResult};
+use windows::{LifeWindow, Window, WindowDrawResult};
 
 /// Application-level event types.
 #[derive(PartialEq)]
@@ -48,54 +48,8 @@ pub enum AppCommand {
     CursorHide,
     CursorShow,
     CursorPosition(u16, u16), // Implies "CursorShow"
-    Close,
+    CloseChildWindow,
     Quit,
-}
-
-/// Commands back to the app from event handlers
-/// TODO break this into other source?
-struct AppCommands(Vec<AppCommand>);
-
-impl AppCommands {
-    /// Create a no-op AppCommands.
-    pub fn none() -> Self {
-        Self(Vec::new())
-    }
-
-    /// Create an AppCommands with a single AppCommand.
-    pub fn one(command: AppCommand) -> Self {
-        Self(vec![command])
-    }
-
-    /// Append another AppCommand.
-    pub fn push(&mut self, command: AppCommand) {
-        self.0.push(command);
-    }
-
-    /// Append another set of AppCommands.
-    pub fn append(&mut self, app_commands: &mut AppCommands) {
-        self.0.append(&mut app_commands.0);
-    }
-}
-
-impl IntoIterator for AppCommands {
-    type Item = AppCommand;
-    type IntoIter = std::vec::IntoIter<AppCommand>;
-
-    /// Return a moving iterator.
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a AppCommands {
-    type Item = &'a AppCommand;
-    type IntoIter = std::slice::Iter<'a, AppCommand>;
-
-    /// Return a borrowing iterator.
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
-    }
 }
 
 /// Main application structure.
@@ -107,10 +61,7 @@ struct App {
     next_tick: Option<Instant>,
 
     /// Reference to the main Life window
-    life_window: LifeWindow,
-
-    /// Reference to the Help window
-    help_window: HelpWindow,
+    life_window: Option<Box<dyn Window>>,
 
     /// True if the help popup is active.
     help_popup: bool,
@@ -122,8 +73,7 @@ impl App {
         Self {
             tick_rate: Duration::from_millis(20),
             next_tick: None,
-            life_window: LifeWindow::new(),
-            help_window: HelpWindow {},
+            life_window: Some(Box::new(LifeWindow::new())),
             help_popup: false,
         }
     }
@@ -132,7 +82,7 @@ impl App {
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         let terminal_size = terminal.size()?;
 
-        self.life_window.init(&terminal_size);
+        self.life_window.unwrap().init(&terminal_size);
 
         'outer: loop {
             let mut draw_result = None;
@@ -167,44 +117,19 @@ impl App {
 
             // Route events to windows
             // TODO generalize away from help_popup, make a window stack
-            if self.help_popup {
-                let app_commands = self.help_window.handle_app_event(&mut app_event);
-                for command in &app_commands {
-                    if command == &AppCommand::Close {
-                        self.help_popup = false;
-                    }
+            let result = self.life_window.unwrap().handle_app_event(&mut app_event);
+
+            match result {
+                Some(AppCommand::Quit) => break 'outer,
+
+                Some(AppCommand::TimerStart(duration)) => {
+                    self.tick_rate = duration;
+                    self.next_tick = Some(Instant::now());
                 }
-            }
 
-            if app_event.propagate {
-                // Main app
-                let app_commands = self.life_window.handle_app_event(&mut app_event);
+                Some(AppCommand::TimerStop) => self.next_tick = None,
 
-                for command in &app_commands {
-                    match command {
-                        AppCommand::Quit => break 'outer,
-
-                        AppCommand::TimerStart(duration) => {
-                            self.tick_rate = *duration;
-                            self.next_tick = Some(Instant::now());
-                        }
-
-                        AppCommand::TimerStop => self.next_tick = None,
-
-                        AppCommand::HelpPopup => self.help_popup = true,
-
-                        AppCommand::CursorHide => terminal.hide_cursor()?,
-
-                        AppCommand::CursorShow => terminal.show_cursor()?,
-
-                        AppCommand::CursorPosition(x, y) => {
-                            terminal.set_cursor_position((*x, *y))?;
-                            terminal.show_cursor()?;
-                        }
-
-                        _ => (),
-                    }
-                }
+                _ => (),
             }
         } // 'outer
         Ok(())
@@ -212,10 +137,12 @@ impl App {
 
     /// Main drawing method.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        let mut draw_result = self.life_window.draw(frame);
+        let mut cur_win = self.life_window.as_deref();
+        let mut draw_result = None;
 
-        if self.help_popup {
-            draw_result = self.help_window.draw(frame);
+        while let Some(win) = cur_win {
+            draw_result = win.draw(frame);
+            cur_win = win.get_child();
         }
 
         draw_result

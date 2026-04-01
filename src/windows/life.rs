@@ -1,9 +1,9 @@
 use crate::{
-    AppCommand, AppCommands, AppEvent, AppEventType,
+    AppCommand, AppEvent, AppEventType,
     life::Life,
     util,
     widgets::LifeWidget,
-    windows::{Window, WindowDrawResult},
+    windows::{Window, WindowDrawResult,HelpWindow},
 };
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{layout::Size, prelude::Stylize, symbols::border, text::Line, widgets::Block};
@@ -25,6 +25,9 @@ pub struct LifeWindow {
 
     /// Tracker for prefix count on some commands
     count: u32,
+
+    /// Help Window
+    help_window: Option<Box<dyn Window>>,
 }
 
 impl LifeWindow {
@@ -36,17 +39,18 @@ impl LifeWindow {
             cursor_y: 0,
             running: false,
             count: 0,
+            help_window: None,
         }
     }
 
     /// Handle Life window key events.
-    fn handle_key_event(&mut self, key_event: &KeyEvent) -> AppCommands {
-        let mut app_commands = AppCommands::none();
+    fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<AppCommand> {
+        let mut app_command = None;
         let old_running = self.running;
 
         match key_event.code {
             KeyCode::Char('q') | KeyCode::Esc => {
-                app_commands.push(AppCommand::Quit);
+                app_command = Some(AppCommand::Quit);
             }
 
             KeyCode::Up | KeyCode::Char('k') => {
@@ -112,7 +116,7 @@ impl LifeWindow {
             }
 
             KeyCode::Char('?') => {
-                app_commands.push(AppCommand::HelpPopup);
+                self.help_window = Some(Box::new(HelpWindow::new()));
             }
 
             _ => (),
@@ -133,13 +137,13 @@ impl LifeWindow {
 
         if running_changed {
             if self.running {
-                app_commands.push(AppCommand::TimerStart(Duration::from_millis(20)));
+                app_command = Some(AppCommand::TimerStart(Duration::from_millis(20)));
             } else {
-                app_commands.push(AppCommand::TimerStop);
+                app_command = Some(AppCommand::TimerStop);
             }
         }
 
-        app_commands
+        app_command
     }
 }
 
@@ -179,13 +183,25 @@ impl Window for LifeWindow {
     }
 
     /// Handle application events.
-    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> AppCommands {
-        let mut app_commands = AppCommands::none();
+    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
+        let mut app_command = None;
+
+        if let Some(win) = self.help_window {
+            let result = win.handle_app_event(app_event);
+
+            if let Some(command) = result && command == AppCommand::CloseChildWindow {
+                self.help_window = None;
+            }
+        }
+
+        if app_event.propagate == false {
+            return app_command;
+        }
 
         match &app_event.event_type {
             AppEventType::Event(e) => match e {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                    app_commands.append(&mut self.handle_key_event(key_event));
+                    app_command = self.handle_key_event(key_event);
                 }
 
                 Event::Resize(width, height) => {
@@ -200,6 +216,6 @@ impl Window for LifeWindow {
             }
         }
 
-        app_commands
+        app_command
     }
 }

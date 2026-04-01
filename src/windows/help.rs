@@ -1,5 +1,5 @@
 use crate::{
-    AppCommand, AppCommands, AppEvent, AppEventType,
+    AppCommand, AppEvent, AppEventType,
     widgets::HelpWidget,
     windows::{Window, WindowDrawResult},
 };
@@ -11,6 +11,12 @@ use ratatui::{
 
 /// Window to show the HelpWidget.
 pub struct HelpWindow;
+
+impl HelpWindow {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
 impl Window for HelpWindow {
     /// Draw the Help Window.
@@ -34,18 +40,18 @@ impl Window for HelpWindow {
     }
 
     /// Handle app events for the Help Window.
-    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> AppCommands {
+    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
         match &app_event.event_type {
             AppEventType::Event(e) => match e {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                     app_event.propagate = false;
-                    AppCommands::one(AppCommand::Close)
+                    Some(AppCommand::CloseChildWindow)
                 }
 
-                _ => AppCommands::none(),
+                _ => None,
             },
 
-            _ => AppCommands::none(),
+            _ => None,
         }
     }
 }
