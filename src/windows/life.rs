@@ -3,7 +3,7 @@ use crate::{
     life::Life,
     util,
     widgets::LifeWidget,
-    windows::{Window, WindowDrawResult,HelpWindow},
+    windows::{AboutWindow, HelpWindow, Window, WindowDrawResult},
 };
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{layout::Size, prelude::Stylize, symbols::border, text::Line, widgets::Block};
@@ -27,7 +27,7 @@ pub struct LifeWindow {
     count: u32,
 
     /// Help Window
-    help_window: Option<Box<dyn Window>>,
+    child_window: Option<Box<dyn Window>>,
 }
 
 impl LifeWindow {
@@ -39,7 +39,7 @@ impl LifeWindow {
             cursor_y: 0,
             running: false,
             count: 0,
-            help_window: None,
+            child_window: None,
         }
     }
 
@@ -116,7 +116,11 @@ impl LifeWindow {
             }
 
             KeyCode::Char('?') => {
-                self.help_window = Some(Box::new(HelpWindow::new()));
+                self.child_window = Some(Box::new(HelpWindow::new()));
+            }
+
+            KeyCode::Char('a') => {
+                self.child_window = Some(Box::new(AboutWindow::new()));
             }
 
             _ => (),
@@ -176,6 +180,10 @@ impl Window for LifeWindow {
 
         (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
 
+        if let Some(win) = self.child_window.as_deref_mut() {
+            return win.draw(frame);
+        }
+
         Some(WindowDrawResult::cursor_position(
             self.cursor_x,
             self.cursor_y,
@@ -186,15 +194,17 @@ impl Window for LifeWindow {
     fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
         let mut app_command = None;
 
-        if let Some(win) = self.help_window {
+        if let Some(win) = self.child_window.as_deref_mut() {
             let result = win.handle_app_event(app_event);
 
-            if let Some(command) = result && command == AppCommand::CloseChildWindow {
-                self.help_window = None;
+            if let Some(command) = result
+                && command == AppCommand::CloseChildWindow
+            {
+                self.child_window = None;
             }
         }
 
-        if app_event.propagate == false {
+        if !app_event.propagate {
             return app_command;
         }
 

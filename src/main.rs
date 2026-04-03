@@ -44,7 +44,6 @@ pub enum AppCommand {
     TimerStart(Duration), // Tick immediately
     TimerStop,
     TimerContinue,
-    HelpPopup, // TODO generalize to arbitrary popups
     CursorHide,
     CursorShow,
     CursorPosition(u16, u16), // Implies "CursorShow"
@@ -62,9 +61,6 @@ struct App {
 
     /// Reference to the main Life window
     life_window: Option<Box<dyn Window>>,
-
-    /// True if the help popup is active.
-    help_popup: bool,
 }
 
 impl App {
@@ -74,7 +70,6 @@ impl App {
             tick_rate: Duration::from_millis(20),
             next_tick: None,
             life_window: Some(Box::new(LifeWindow::new())),
-            help_popup: false,
         }
     }
 
@@ -82,7 +77,10 @@ impl App {
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         let terminal_size = terminal.size()?;
 
-        self.life_window.unwrap().init(&terminal_size);
+        self.life_window
+            .as_deref_mut()
+            .unwrap()
+            .init(&terminal_size);
 
         'outer: loop {
             let mut draw_result = None;
@@ -116,8 +114,11 @@ impl App {
             };
 
             // Route events to windows
-            // TODO generalize away from help_popup, make a window stack
-            let result = self.life_window.unwrap().handle_app_event(&mut app_event);
+            let result = self
+                .life_window
+                .as_deref_mut()
+                .unwrap()
+                .handle_app_event(&mut app_event);
 
             match result {
                 Some(AppCommand::Quit) => break 'outer,
@@ -137,15 +138,7 @@ impl App {
 
     /// Main drawing method.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        let mut cur_win = self.life_window.as_deref();
-        let mut draw_result = None;
-
-        while let Some(win) = cur_win {
-            draw_result = win.draw(frame);
-            cur_win = win.get_child();
-        }
-
-        draw_result
+        self.life_window.as_deref_mut()?.draw(frame)
     }
 }
 
