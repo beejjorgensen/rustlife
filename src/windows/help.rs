@@ -17,7 +17,7 @@ impl HelpWindow {
 impl Window for HelpWindow {
     /// Draw the Help Window.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        let area = util::centered_area(26, 16, frame);
+        let area = util::centered_area(43, 17, frame);
         let help = HelpWidget::new();
         frame.render_widget(help, area);
 

@@ -6,9 +6,8 @@ use crossterm::event::{Event, KeyEventKind};
 use ratatui::{
     layout::Alignment,
     prelude::Stylize,
-    style::Style,
     symbols::border,
-    text::{Line, Span},
+    text::Line,
     widgets::{Block, Clear, Padding, Paragraph, Wrap},
 };
 
@@ -24,27 +23,26 @@ impl AboutWindow {
 impl Window for AboutWindow {
     /// Draw the About Window.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        let area = util::centered_area(40, 16, frame);
+        let area = util::centered_area(40, 12, frame);
 
         let text = vec![
-            Line::from(vec![
-                Span::raw("First"),
-                Span::styled("line", Style::new().green().italic()),
-                ".".into(),
-            ]),
-            Line::from("Second line".red()),
-            "Third line".into(),
+            "A Rust/Ratatui implementation of Conway's Game of Life"
+                .bold()
+                .into(),
+            "".into(),
+            "Written by Beej Jorgensen <beej@beej.us>".into(),
+            "".into(),
+            "Released to the public domain under the terms of the Unlicense".into(),
         ];
 
         let about_block = Block::bordered()
             .title(Line::from(" About ".bold()))
             .title_bottom(Line::from(" Press any key ").centered())
-            .padding(Padding::uniform(1))
+            .padding(Padding::new(2, 2, 1, 1))
             .border_set(border::THICK);
 
         let paragraph = Paragraph::new(text)
             .block(about_block)
-            //.style(Style::new().white().on_black())
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: true });
 

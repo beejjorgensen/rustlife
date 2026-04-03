@@ -36,7 +36,7 @@ impl Widget for &HelpWidget {
         let block = Block::bordered()
             .title(Line::from(" Help ".bold()))
             .title_bottom(Line::from(" Press any key ").centered())
-            .padding(Padding::uniform(1))
+            .padding(Padding::new(2, 2, 1, 1))
             .border_set(border::THICK);
 
         let text = vec![
@@ -46,12 +46,13 @@ impl Widget for &HelpWidget {
             " /|\\".into(),
             "b j n  (or arrow keys)".into(),
             "".into(),
-            "t: Toggle cell".into(),
-            "s: Step".into(),
-            "r: Run start/stop".into(),
-            "c: Clear screen".into(),
-            "R: Randomize".into(),
-            "q: Quit".into(),
+            "t: Toggle cell       s: Step".into(),
+            "r: Run start/stop    c: Clear screen".into(),
+            "R: Randomize         ?: Help".into(),
+            "a: About             q: Quit".into(),
+            "".into(),
+            "Numeric count followed by \"h\" draws a".into(),
+            "horizontal line.".into(),
         ];
 
         let paragraph = Paragraph::new(text).block(block);
