@@ -1,5 +1,8 @@
 //! Various utility functions
-use ratatui::prelude::Rect;
+use ratatui::{
+    prelude::{Frame, Rect},
+    layout::{Layout, Direction, Constraint, Flex},
+};
 
 /// Clamp x, y coordinates to a [`Rect`].
 #[allow(dead_code)]
@@ -20,3 +23,21 @@ pub fn inset_rect(x_amt: u16, y_amt: u16, rect: Rect) -> Rect {
         height: rect.height.saturating_sub(y_amt * 2),
     }
 }
+
+/// Create a new centered area.
+pub fn centered_area(width: u16, height: u16, frame: &Frame) -> Rect {
+    let outer = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(vec![Constraint::Length(height)])
+        .flex(Flex::Center)
+        .split(frame.area());
+
+    let inner = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(vec![Constraint::Length(width)])
+        .flex(Flex::Center)
+        .split(outer[0]);
+
+    inner[0]
+}
+

@@ -1,14 +1,16 @@
 use crate::{
     AppCommand, AppEvent, AppEventType,
     windows::{Window, WindowDrawResult},
+    util,
 };
 use crossterm::event::{Event, KeyEventKind};
 use ratatui::{
     text::{Line, Span},
     style::Style,
-    widgets::{Paragraph, Block, Wrap},
-    layout::{Flex, Alignment},
-    prelude::{Constraint, Direction, Layout, Stylize},
+    symbols::border,
+    widgets::{Paragraph, Block, Wrap, Clear, Padding},
+    layout::Alignment,
+    prelude::Stylize,
 };
 
 /// Window to show the AboutWidget.
@@ -23,17 +25,7 @@ impl AboutWindow {
 impl Window for AboutWindow {
     /// Draw the About Window.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        let outer = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(16)])
-            .flex(Flex::Center)
-            .split(frame.area());
-
-        let inner = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints(vec![Constraint::Length(40)])
-            .flex(Flex::Center)
-            .split(outer[0]);
+        let area = util::centered_area(40, 16, frame);
 
         let text = vec![
             Line::from(vec![
@@ -45,13 +37,20 @@ impl Window for AboutWindow {
             "Third line".into(),
         ];
 
+        let about_block = Block::bordered()
+                .title(Line::from(" About ".bold()))
+                .title_bottom(Line::from(" Press any key ").centered())
+                .padding(Padding::uniform(1))
+                .border_set(border::THICK);
+
         let paragraph = Paragraph::new(text)
-            .block(Block::bordered().title("Paragraph"))
-            .style(Style::new().white().on_black())
+            .block(about_block)
+            //.style(Style::new().white().on_black())
             .alignment(Alignment::Center)
             .wrap(Wrap { trim: true });
 
-        frame.render_widget(paragraph, inner[0]);
+        frame.render_widget(Clear, area);
+        frame.render_widget(paragraph, area);
 
         Some(WindowDrawResult::cursor_hide())
     }

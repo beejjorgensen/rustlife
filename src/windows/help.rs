@@ -2,12 +2,9 @@ use crate::{
     AppCommand, AppEvent, AppEventType,
     widgets::HelpWidget,
     windows::{Window, WindowDrawResult},
+    util,
 };
 use crossterm::event::{Event, KeyEventKind};
-use ratatui::{
-    layout::Flex,
-    prelude::{Constraint, Direction, Layout},
-};
 
 /// Window to show the HelpWidget.
 pub struct HelpWindow;
@@ -21,20 +18,9 @@ impl HelpWindow {
 impl Window for HelpWindow {
     /// Draw the Help Window.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        let outer = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(16)])
-            .flex(Flex::Center)
-            .split(frame.area());
-
-        let inner = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints(vec![Constraint::Length(26)])
-            .flex(Flex::Center)
-            .split(outer[0]);
-
+        let area = util::centered_area(26, 16, frame);
         let help = HelpWidget::new();
-        frame.render_widget(help, inner[0]);
+        frame.render_widget(help, area);
 
         Some(WindowDrawResult::cursor_hide())
     }
