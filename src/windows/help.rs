@@ -1,8 +1,7 @@
 use crate::{
-    AppCommand, AppEvent, AppEventType,
+    AppCommand, AppEvent, AppEventType, util,
     widgets::HelpWidget,
     windows::{Window, WindowDrawResult},
-    util,
 };
 use crossterm::event::{Event, KeyEventKind};
 

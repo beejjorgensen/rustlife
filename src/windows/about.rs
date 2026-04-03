@@ -1,16 +1,15 @@
 use crate::{
-    AppCommand, AppEvent, AppEventType,
+    AppCommand, AppEvent, AppEventType, util,
     windows::{Window, WindowDrawResult},
-    util,
 };
 use crossterm::event::{Event, KeyEventKind};
 use ratatui::{
-    text::{Line, Span},
-    style::Style,
-    symbols::border,
-    widgets::{Paragraph, Block, Wrap, Clear, Padding},
     layout::Alignment,
     prelude::Stylize,
+    style::Style,
+    symbols::border,
+    text::{Line, Span},
+    widgets::{Block, Clear, Padding, Paragraph, Wrap},
 };
 
 /// Window to show the AboutWidget.
@@ -38,10 +37,10 @@ impl Window for AboutWindow {
         ];
 
         let about_block = Block::bordered()
-                .title(Line::from(" About ".bold()))
-                .title_bottom(Line::from(" Press any key ").centered())
-                .padding(Padding::uniform(1))
-                .border_set(border::THICK);
+            .title(Line::from(" About ".bold()))
+            .title_bottom(Line::from(" Press any key ").centered())
+            .padding(Padding::uniform(1))
+            .border_set(border::THICK);
 
         let paragraph = Paragraph::new(text)
             .block(about_block)

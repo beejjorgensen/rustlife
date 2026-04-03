@@ -1,7 +1,7 @@
 //! Various utility functions
 use ratatui::{
+    layout::{Constraint, Direction, Flex, Layout},
     prelude::{Frame, Rect},
-    layout::{Layout, Direction, Constraint, Flex},
 };
 
 /// Clamp x, y coordinates to a [`Rect`].
@@ -40,4 +40,3 @@ pub fn centered_area(width: u16, height: u16, frame: &Frame) -> Rect {
 
     inner[0]
 }
-
