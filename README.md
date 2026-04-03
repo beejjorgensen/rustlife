@@ -29,6 +29,4 @@ q: Quit
 
 ## TODO
 
-* Add keys and functionality:
-  * About
 * Colors
