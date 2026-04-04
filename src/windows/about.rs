@@ -28,11 +28,14 @@ impl Window for AboutWindow {
         let text = vec![
             "A Rust/Ratatui implementation of Conway's Game of Life"
                 .bold()
+                .fg(util::rgb6_to_indexed(3, 3, 5))
                 .into(),
             "".into(),
             "Written by Beej Jorgensen <beej@beej.us>".into(),
             "".into(),
-            "Released to the public domain under the terms of the Unlicense".into(),
+            "Released to the public domain under the terms of the Unlicense"
+                .fg(util::gray_to_indexed(17))
+                .into(),
         ];
 
         let about_block = Block::bordered()

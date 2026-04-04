@@ -24,9 +24,7 @@ t: Toggle cell
 c: Clear screen
 R: Randomize
 ?: Help
+a: About
 q: Quit
 ```
 
-## TODO
-
-* Colors
