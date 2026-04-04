@@ -1,19 +1,3 @@
-use crate::{AppCommand, AppEvent};
-
-/// Interface for a Window. The Window draws its own widgets and handles events.
-pub trait Window {
-    /// Initialize given the terminal.
-    fn init(&mut self) {}
-
-    /// Ratatui main drawing function.
-    fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult>;
-
-    /// Handle application events.
-    fn handle_app_event(&mut self, _app_event: &mut AppEvent) -> Option<AppCommand> {
-        None
-    }
-}
-
 /// This is passed back from the `draw()` method to let the main app do things with the Terminal
 /// instance.
 pub struct WindowDrawResult {

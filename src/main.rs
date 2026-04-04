@@ -11,7 +11,7 @@ mod util;
 mod widgets;
 mod windows;
 
-use windows::{LifeWindow, Window, WindowDrawResult};
+use windows::{RootWindow, WindowDrawResult};
 
 /// Application-level event types.
 #[derive(PartialEq)]
@@ -51,31 +51,6 @@ pub enum AppCommand {
     Quit,
 }
 
-/// Root Window Types
-enum RootWindow {
-    Life(LifeWindow),
-}
-
-impl RootWindow {
-    fn init(&mut self) {
-        match self {
-            RootWindow::Life(win) => win.init(),
-        }
-    }
-
-    fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        match self {
-            RootWindow::Life(win) => win.draw(frame),
-        }
-    }
-
-    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
-        match self {
-            RootWindow::Life(win) => win.handle_app_event(app_event),
-        }
-    }
-}
-
 /// Main application structure.
 struct App {
     /// Delay between animation frames.
@@ -85,7 +60,7 @@ struct App {
     next_tick: Option<Instant>,
 
     /// Reference to the main Life window
-    root_window: Option<RootWindow>,
+    root_window: RootWindow,
 }
 
 impl App {
@@ -94,15 +69,25 @@ impl App {
         Self {
             tick_rate: Duration::from_millis(20),
             next_tick: None,
-            root_window: Some(RootWindow::Life(LifeWindow::new())),
+            root_window: RootWindow::new(),
         }
+    }
+
+    fn init(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
+        let size = terminal.size()?;
+
+        if size.width < 80 || size.height < 24 {
+            return Err("terminal too small".into());
+        }
+
+        self.root_window.init(size);
+
+        Ok(())
     }
 
     /// Run loop.
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        if let Some(win) = self.root_window.as_mut() {
-            win.init();
-        }
+        self.init(terminal)?;
 
         'outer: loop {
             let mut draw_result = None;
@@ -136,21 +121,19 @@ impl App {
             };
 
             // Route events to windows
-            if let Some(win) = self.root_window.as_mut() {
-                let result = win.handle_app_event(&mut app_event);
+            let result = self.root_window.handle_app_event(&mut app_event);
 
-                match result {
-                    Some(AppCommand::Quit) => break 'outer,
+            match result {
+                Some(AppCommand::Quit) => break 'outer,
 
-                    Some(AppCommand::TimerStart(duration)) => {
-                        self.tick_rate = duration;
-                        self.next_tick = Some(Instant::now());
-                    }
-
-                    Some(AppCommand::TimerStop) => self.next_tick = None,
-
-                    _ => (),
+                Some(AppCommand::TimerStart(duration)) => {
+                    self.tick_rate = duration;
+                    self.next_tick = Some(Instant::now());
                 }
+
+                Some(AppCommand::TimerStop) => self.next_tick = None,
+
+                _ => (),
             }
         } // 'outer
         Ok(())
@@ -158,11 +141,7 @@ impl App {
 
     /// Main drawing method.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        if let Some(win) = self.root_window.as_mut() {
-            win.draw(frame)
-        } else {
-            None
-        }
+        self.root_window.draw(frame)
     }
 }
 

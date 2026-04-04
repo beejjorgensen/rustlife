@@ -1,7 +1,4 @@
-use crate::{
-    AppCommand, AppEvent, AppEventType, util,
-    windows::{Window, WindowDrawResult},
-};
+use crate::{AppCommand, AppEvent, AppEventType, util, windows::WindowDrawResult};
 use crossterm::event::{Event, KeyEventKind};
 use ratatui::{
     layout::Alignment,
@@ -15,14 +12,13 @@ use ratatui::{
 pub struct AboutWindow;
 
 impl AboutWindow {
+    /// Create a new About window.
     pub fn new() -> Self {
         Self {}
     }
-}
 
-impl Window for AboutWindow {
     /// Draw the About Window.
-    fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
+    pub fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
         let area = util::centered_area(40, 12, frame);
 
         let text = vec![
@@ -56,7 +52,7 @@ impl Window for AboutWindow {
     }
 
     /// Handle app events for the About Window.
-    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
+    pub fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
         match &app_event.event_type {
             AppEventType::Event(e) => match e {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {

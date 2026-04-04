@@ -3,18 +3,20 @@ use crate::{
     life::Life,
     util,
     widgets::LifeWidget,
-    windows::{AboutWindow, HelpWindow, Window, WindowDrawResult},
+    windows::{AboutWindow, HelpWindow, WindowDrawResult},
 };
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{prelude::Stylize, symbols::border, text::Line, widgets::Block};
 use std::time::Duration;
 
+/// Child Windows for the Life window.
 enum LifeChildWindow {
     Help(HelpWindow),
     About(AboutWindow),
 }
 
 impl LifeChildWindow {
+    /// Draw Life child windows.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
         match self {
             LifeChildWindow::Help(win) => win.draw(frame),
@@ -22,6 +24,7 @@ impl LifeChildWindow {
         }
     }
 
+    /// Handle events on Life child windows.
     fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
         match self {
             LifeChildWindow::Help(win) => win.handle_app_event(app_event),
@@ -32,9 +35,6 @@ impl LifeChildWindow {
 
 /// Window to show the Life grid.
 pub struct LifeWindow {
-    /// The Life grid data structure.
-    life: Life,
-
     /// Cursor X position.
     cursor_x: u16,
 
@@ -55,7 +55,6 @@ impl LifeWindow {
     /// Create a new LifeWindow.
     pub fn new() -> LifeWindow {
         LifeWindow {
-            life: Life::new(),
             cursor_x: 0,
             cursor_y: 0,
             running: false,
@@ -65,7 +64,7 @@ impl LifeWindow {
     }
 
     /// Handle Life window key events.
-    fn handle_key_event(&mut self, key_event: &KeyEvent) -> Option<AppCommand> {
+    fn handle_key_event(&mut self, key_event: &KeyEvent, life: &mut Life) -> Option<AppCommand> {
         let mut app_command = None;
         let old_running = self.running;
 
@@ -83,7 +82,7 @@ impl LifeWindow {
             KeyCode::Left | KeyCode::Char('h') => {
                 if self.count > 0 {
                     self.running = false;
-                    self.life.horizontal_line(
+                    life.horizontal_line(
                         self.cursor_x as usize - 1,
                         self.cursor_y as usize - 1,
                         self.count,
@@ -114,22 +113,21 @@ impl LifeWindow {
 
             KeyCode::Char('s') => {
                 self.running = false;
-                self.life.step();
+                life.step();
             }
 
             KeyCode::Char(' ') | KeyCode::Char('t') => {
                 self.running = false;
-                self.life
-                    .toggle(self.cursor_x as usize - 1, self.cursor_y as usize - 1);
+                life.toggle(self.cursor_x as usize - 1, self.cursor_y as usize - 1);
             }
 
             KeyCode::Char('c') => {
                 self.running = false;
-                self.life.clear();
+                life.clear();
             }
 
             KeyCode::Char('R') => {
-                self.life.randomize();
+                life.randomize();
             }
 
             KeyCode::Char('r') => {
@@ -170,32 +168,27 @@ impl LifeWindow {
 
         app_command
     }
-}
 
-impl Window for LifeWindow {
     /// Initialize the LifeWindow.
-    fn init(&mut self) {
+    pub fn init(&mut self) {
         let terminal_size = util::get_terminal_size();
-
-        self.life.init(
-            terminal_size.width as usize - 2,
-            terminal_size.height as usize - 2,
-        );
-
-        self.life.randomize();
 
         self.cursor_x = terminal_size.width / 2;
         self.cursor_y = terminal_size.height / 2;
     }
 
-    /// Draw the LifeWindow
-    fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
+    /// Draw the LifeWindow.
+    pub fn draw(
+        &mut self,
+        frame: &mut ratatui::Frame,
+        life: &mut Life,
+    ) -> Option<WindowDrawResult> {
         let block = Block::bordered()
             .title(Line::from(" Life ".bold()).centered())
             .title_bottom(Line::from(" q→Quit | ?→Help ").centered())
             .border_set(border::THICK);
 
-        let life_widget = LifeWidget::new(&self.life).block(block);
+        let life_widget = LifeWidget::new(life).block(block);
 
         let inner = life_widget.inner(frame.area());
 
@@ -214,7 +207,11 @@ impl Window for LifeWindow {
     }
 
     /// Handle application events.
-    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
+    pub fn handle_app_event(
+        &mut self,
+        app_event: &mut AppEvent,
+        life: &mut Life,
+    ) -> Option<AppCommand> {
         let mut app_command = None;
 
         if let Some(win) = self.child_window.as_mut() {
@@ -234,18 +231,18 @@ impl Window for LifeWindow {
         match &app_event.event_type {
             AppEventType::Event(e) => match e {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
-                    app_command = self.handle_key_event(key_event);
+                    app_command = self.handle_key_event(key_event, life);
                 }
 
                 Event::Resize(width, height) => {
-                    self.life.resize(*width as usize - 1, *height as usize - 2);
+                    life.resize(*width as usize - 1, *height as usize - 2);
                 }
 
                 _ => (),
             },
 
             AppEventType::Tick => {
-                self.life.step();
+                life.step();
             }
         }
 
