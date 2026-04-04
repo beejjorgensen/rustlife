@@ -1,6 +1,7 @@
 //! Various utility functions
+use crossterm::terminal;
 use ratatui::{
-    layout::{Constraint, Direction, Flex, Layout},
+    layout::{Constraint, Direction, Flex, Layout, Size},
     prelude::{Frame, Rect},
     style::Color,
 };
@@ -69,4 +70,11 @@ pub fn gray_to_indexed(g: u8) -> Color {
     } else {
         Color::Indexed(232 + (g - 1))
     }
+}
+
+/// Get the terminal size as a Rect.
+#[allow(dead_code)]
+pub fn get_terminal_size() -> Size {
+    let (cols, rows) = terminal::size().unwrap_or((80, 24));
+    Size::new(cols, rows)
 }

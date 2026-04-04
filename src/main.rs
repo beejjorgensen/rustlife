@@ -51,6 +51,31 @@ pub enum AppCommand {
     Quit,
 }
 
+/// Root Window Types
+enum RootWindow {
+    Life(LifeWindow),
+}
+
+impl RootWindow {
+    fn init(&mut self) {
+        match self {
+            RootWindow::Life(win) => win.init(),
+        }
+    }
+
+    fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
+        match self {
+            RootWindow::Life(win) => win.draw(frame),
+        }
+    }
+
+    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
+        match self {
+            RootWindow::Life(win) => win.handle_app_event(app_event),
+        }
+    }
+}
+
 /// Main application structure.
 struct App {
     /// Delay between animation frames.
@@ -60,7 +85,7 @@ struct App {
     next_tick: Option<Instant>,
 
     /// Reference to the main Life window
-    life_window: Option<Box<dyn Window>>,
+    root_window: Option<RootWindow>,
 }
 
 impl App {
@@ -69,18 +94,15 @@ impl App {
         Self {
             tick_rate: Duration::from_millis(20),
             next_tick: None,
-            life_window: Some(Box::new(LifeWindow::new())),
+            root_window: Some(RootWindow::Life(LifeWindow::new())),
         }
     }
 
     /// Run loop.
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
-        let terminal_size = terminal.size()?;
-
-        self.life_window
-            .as_deref_mut()
-            .unwrap()
-            .init(&terminal_size);
+        if let Some(win) = self.root_window.as_mut() {
+            win.init();
+        }
 
         'outer: loop {
             let mut draw_result = None;
@@ -114,23 +136,21 @@ impl App {
             };
 
             // Route events to windows
-            let result = self
-                .life_window
-                .as_deref_mut()
-                .unwrap()
-                .handle_app_event(&mut app_event);
+            if let Some(win) = self.root_window.as_mut() {
+                let result = win.handle_app_event(&mut app_event);
 
-            match result {
-                Some(AppCommand::Quit) => break 'outer,
+                match result {
+                    Some(AppCommand::Quit) => break 'outer,
 
-                Some(AppCommand::TimerStart(duration)) => {
-                    self.tick_rate = duration;
-                    self.next_tick = Some(Instant::now());
+                    Some(AppCommand::TimerStart(duration)) => {
+                        self.tick_rate = duration;
+                        self.next_tick = Some(Instant::now());
+                    }
+
+                    Some(AppCommand::TimerStop) => self.next_tick = None,
+
+                    _ => (),
                 }
-
-                Some(AppCommand::TimerStop) => self.next_tick = None,
-
-                _ => (),
             }
         } // 'outer
         Ok(())
@@ -138,7 +158,11 @@ impl App {
 
     /// Main drawing method.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
-        self.life_window.as_deref_mut()?.draw(frame)
+        if let Some(win) = self.root_window.as_mut() {
+            win.draw(frame)
+        } else {
+            None
+        }
     }
 }
 

@@ -6,8 +6,29 @@ use crate::{
     windows::{AboutWindow, HelpWindow, Window, WindowDrawResult},
 };
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{layout::Size, prelude::Stylize, symbols::border, text::Line, widgets::Block};
+use ratatui::{prelude::Stylize, symbols::border, text::Line, widgets::Block};
 use std::time::Duration;
+
+enum LifeChildWindow {
+    Help(HelpWindow),
+    About(AboutWindow),
+}
+
+impl LifeChildWindow {
+    fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult> {
+        match self {
+            LifeChildWindow::Help(win) => win.draw(frame),
+            LifeChildWindow::About(win) => win.draw(frame),
+        }
+    }
+
+    fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
+        match self {
+            LifeChildWindow::Help(win) => win.handle_app_event(app_event),
+            LifeChildWindow::About(win) => win.handle_app_event(app_event),
+        }
+    }
+}
 
 /// Window to show the Life grid.
 pub struct LifeWindow {
@@ -26,8 +47,8 @@ pub struct LifeWindow {
     /// Tracker for prefix count on some commands
     count: u32,
 
-    /// Help Window
-    child_window: Option<Box<dyn Window>>,
+    /// Help and About Windows
+    child_window: Option<LifeChildWindow>,
 }
 
 impl LifeWindow {
@@ -116,11 +137,11 @@ impl LifeWindow {
             }
 
             KeyCode::Char('?') => {
-                self.child_window = Some(Box::new(HelpWindow::new()));
+                self.child_window = Some(LifeChildWindow::Help(HelpWindow::new()));
             }
 
             KeyCode::Char('a') => {
-                self.child_window = Some(Box::new(AboutWindow::new()));
+                self.child_window = Some(LifeChildWindow::About(AboutWindow::new()));
             }
 
             _ => (),
@@ -153,7 +174,9 @@ impl LifeWindow {
 
 impl Window for LifeWindow {
     /// Initialize the LifeWindow.
-    fn init(&mut self, terminal_size: &Size) {
+    fn init(&mut self) {
+        let terminal_size = util::get_terminal_size();
+
         self.life.init(
             terminal_size.width as usize - 2,
             terminal_size.height as usize - 2,
@@ -180,7 +203,7 @@ impl Window for LifeWindow {
 
         (self.cursor_x, self.cursor_y) = util::clamp_to_rect(self.cursor_x, self.cursor_y, inner);
 
-        if let Some(win) = self.child_window.as_deref_mut() {
+        if let Some(win) = self.child_window.as_mut() {
             return win.draw(frame);
         }
 
@@ -194,7 +217,7 @@ impl Window for LifeWindow {
     fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
         let mut app_command = None;
 
-        if let Some(win) = self.child_window.as_deref_mut() {
+        if let Some(win) = self.child_window.as_mut() {
             let result = win.handle_app_event(app_event);
 
             if let Some(command) = result

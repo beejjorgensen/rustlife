@@ -1,10 +1,9 @@
 use crate::{AppCommand, AppEvent};
-use ratatui::layout::Size;
 
 /// Interface for a Window. The Window draws its own widgets and handles events.
 pub trait Window {
     /// Initialize given the terminal.
-    fn init(&mut self, _terminal_size: &Size) {}
+    fn init(&mut self) {}
 
     /// Ratatui main drawing function.
     fn draw(&mut self, frame: &mut ratatui::Frame) -> Option<WindowDrawResult>;
