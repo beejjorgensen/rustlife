@@ -1,13 +1,15 @@
 use crate::{
-    AppCommand, AppEvent,
+    AppCommand, AppEvent, AppEventType,
     life::Life,
-    windows::{LifeWindow, WindowDrawResult},
+    windows::{LifeWindow, TooSmallWindow, WindowDrawResult},
 };
+use crossterm::event::Event;
 use ratatui::layout::Size;
 
 /// Root Child Window Types
 enum RootChildWindow {
     Life(LifeWindow),
+    TooSmall(TooSmallWindow),
 }
 
 impl RootChildWindow {
@@ -15,6 +17,7 @@ impl RootChildWindow {
     fn init(&mut self) {
         match self {
             RootChildWindow::Life(win) => win.init(),
+            RootChildWindow::TooSmall(_) => (),
         }
     }
 
@@ -22,6 +25,7 @@ impl RootChildWindow {
     fn draw(&mut self, frame: &mut ratatui::Frame, life: &mut Life) -> Option<WindowDrawResult> {
         match self {
             RootChildWindow::Life(win) => win.draw(frame, life),
+            RootChildWindow::TooSmall(win) => win.draw(frame),
         }
     }
 
@@ -33,6 +37,7 @@ impl RootChildWindow {
     ) -> Option<AppCommand> {
         match self {
             RootChildWindow::Life(win) => win.handle_app_event(app_event, life),
+            _ => None,
         }
     }
 }
@@ -47,6 +52,9 @@ pub struct RootWindow {
 
     /// Root window trampoline
     child_window: Option<RootChildWindow>,
+
+    /// True if we're too small.
+    too_small: bool,
 }
 
 impl RootWindow {
@@ -54,12 +62,40 @@ impl RootWindow {
     pub fn new() -> Self {
         Self {
             life: Life::new(),
-            child_window: Some(RootChildWindow::Life(LifeWindow::new())),
+            child_window: None,
+            too_small: false,
+        }
+    }
+
+    /// Choose the proper root window
+    fn set_root_window(&mut self) {
+        self.child_window = if self.too_small {
+            Some(RootChildWindow::TooSmall(TooSmallWindow::new()))
+        } else {
+            Some(RootChildWindow::Life(LifeWindow::new()))
+        };
+    }
+
+    /// Set too small flag and proper window.
+    ///
+    /// Returns true if it just changed.
+    fn set_too_small(&mut self, width: u16, height: u16) -> bool {
+        let too_small = width < 40 || height < 20;
+
+        if too_small != self.too_small {
+            self.too_small = too_small;
+            self.set_root_window();
+            true
+        } else {
+            false
         }
     }
 
     /// Initialize root window.
     pub fn init(&mut self, size: Size) {
+        self.set_too_small(size.width, size.height);
+        self.set_root_window(); // Unconditionally do this
+
         self.life
             .init(size.width as usize - 2, size.height as usize - 2);
 
@@ -81,6 +117,13 @@ impl RootWindow {
 
     /// Handle app events for the Root Window.
     pub fn handle_app_event(&mut self, app_event: &mut AppEvent) -> Option<AppCommand> {
+        if let AppEventType::Event(Event::Resize(width, height)) = app_event.event_type
+            && self.set_too_small(width, height)
+            && self.too_small
+        {
+            return Some(AppCommand::TimerStop);
+        }
+
         if let Some(win) = self.child_window.as_mut() {
             win.handle_app_event(app_event, &mut self.life)
         } else {

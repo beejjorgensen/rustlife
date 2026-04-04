@@ -76,7 +76,7 @@ impl App {
     fn init(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         let size = terminal.size()?;
 
-        if size.width < 80 || size.height < 24 {
+        if size.width < 40 || size.height < 20 {
             return Err("terminal too small".into());
         }
 
