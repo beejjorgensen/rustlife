@@ -2,6 +2,7 @@
 use ratatui::{
     layout::{Constraint, Direction, Flex, Layout},
     prelude::{Frame, Rect},
+    style::Color,
 };
 
 /// Clamp x, y coordinates to a [`Rect`].
@@ -39,4 +40,33 @@ pub fn centered_area(width: u16, height: u16, frame: &Frame) -> Rect {
         .split(outer[0]);
 
     inner[0]
+}
+
+/// Get an Indexed color for RGB (0..5).
+///
+/// 5,5,0 = bright yellow, for instance.
+///
+/// Use `gray_to_indexed()` for non-black/non-white shades of gray.
+///
+/// https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
+#[allow(dead_code)]
+pub fn rgb6_to_indexed(r: u8, g: u8, b: u8) -> Color {
+    Color::Indexed(16 + 36 * r + 6 * g + b)
+}
+
+/// Get an Indexed color for gray.
+///
+/// There are 24 shades of gray, but this function special-cases black and white at either end for
+/// a total of 26 grays, 0-25.
+///
+/// 0 = black, 25 = white, 13 = medium.
+#[allow(dead_code)]
+pub fn gray_to_indexed(g: u8) -> Color {
+    if g == 0 {
+        Color::Indexed(0) // Black
+    } else if g == 25 {
+        Color::Indexed(15) // White
+    } else {
+        Color::Indexed(232 + (g - 1))
+    }
 }

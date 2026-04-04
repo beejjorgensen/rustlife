@@ -22,7 +22,7 @@ use ratatui::{
     widgets::{Block, Widget},
 };
 
-use crate::life;
+use crate::{life, util};
 
 /// A LifeWidget structure.
 pub struct LifeWidget<'a> {
@@ -67,6 +67,8 @@ impl Widget for LifeWidget<'_> {
 impl Widget for &LifeWidget<'_> {
     /// Render this borrowed LifeWidget.
     fn render(self, area: Rect, buf: &mut Buffer) {
+        let alive_color = util::rgb6_to_indexed(3, 5, 3);
+
         let area = area.intersection(buf.area);
         if let Some(block) = self.block.as_ref() {
             block.render(area, buf);
@@ -89,7 +91,9 @@ impl Widget for &LifeWidget<'_> {
                 match cell {
                     life::LifeCell::Alive => {
                         //buf[(x as u16, y as u16)].set_symbol("▒");
-                        buf[(x as u16 + inner.x, y as u16 + inner.y)].set_symbol("▓");
+                        buf[(x as u16 + inner.x, y as u16 + inner.y)]
+                            .set_symbol("▓")
+                            .set_fg(alive_color);
                     }
                     life::LifeCell::Dead => (),
                 }
