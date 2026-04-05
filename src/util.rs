@@ -64,9 +64,9 @@ pub fn rgb6_to_indexed(r: u8, g: u8, b: u8) -> Color {
 #[allow(dead_code)]
 pub fn gray_to_indexed(g: u8) -> Color {
     if g == 0 {
-        Color::Indexed(0) // Black
+        Color::Indexed(16) // Black
     } else if g == 25 {
-        Color::Indexed(15) // White
+        Color::Indexed(231) // White
     } else {
         Color::Indexed(232 + (g - 1))
     }
