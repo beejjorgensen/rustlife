@@ -1,7 +1,8 @@
 //! Implementation of [Conway's Game of
 //! Life](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life) using [Ratatui](ratatui.rs).
-use crossterm::event;
+use crossterm::{event, execute, terminal::SetTitle};
 use ratatui::{self, DefaultTerminal};
+use std::io::Write;
 use std::time::{Duration, Instant};
 
 pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
@@ -85,9 +86,27 @@ impl App {
         Ok(())
     }
 
+    /// Set the window title
+    fn window_title_set() -> Result<()> {
+        let mut stdout = std::io::stdout();
+        write!(stdout, "\x1b[22;2t")?; // Save current title
+        execute!(std::io::stdout(), SetTitle("Rust Life"))?;
+        Ok(())
+    }
+
+    /// Restore the window title
+    fn window_title_restore() -> Result<()> {
+        let mut stdout = std::io::stdout();
+        write!(stdout, "\x1b[23;2t")?; // Restore window title
+        stdout.flush()?;
+        Ok(())
+    }
+
     /// Run loop.
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         self.init(terminal)?;
+
+        App::window_title_set()?;
 
         'outer: loop {
             let mut draw_result = None;
@@ -136,6 +155,9 @@ impl App {
                 _ => (),
             }
         } // 'outer
+
+        App::window_title_restore()?;
+
         Ok(())
     }
 
